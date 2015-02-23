@@ -45,9 +45,9 @@ namespace NuGetCalcWeb
 
         public static async Task<ZipPackage> DownloadPackage(string package, string version)
         {
-            var nversion = version != null
-                ? new NuGetVersion(version)
-                : await metadataResource.GetLatestVersion(package, true, false, CancellationToken.None).ConfigureAwait(false);
+            var nversion = string.IsNullOrWhiteSpace(version)
+                ? await metadataResource.GetLatestVersion(package, true, false, CancellationToken.None).ConfigureAwait(false)
+                : new NuGetVersion(version);
 
             var tmpFile = PackageTempFiles.Get(package, nversion);
             if (tmpFile == null)

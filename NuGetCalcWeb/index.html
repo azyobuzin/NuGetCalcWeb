@@ -1,0 +1,81 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>NuGetCalc</title>
+    <meta name="description" content="Finds which assembly NuGet adds to your project" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="content/style.css" />
+    <script>/*Analytics*/</script>
+</head>
+<body>
+    <header class="navbar navbar-default">
+        <div class="container">
+            <div class="navbar-header">
+                <span class="navbar-brand">NuGetCalc</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <section>
+            <h1>Find Matching Framework</h1>
+            <script>/*Ad*/</script>
+            <form id="compatibilities_form" data-bind="submit: getCompatibilities">
+                <div class="form-group">
+                    <label for="form_package_id">Package ID</label>
+                    <input type="text" class="form-control" id="form_package_id" required />
+                </div>
+                <div class="form-group">
+                    <label for="form_package_version">Version</label>
+                    <input type="text" class="form-control" id="form_package_version" placeholder="the latest version" />
+                </div>
+                <div class="form-group">
+                    <label for="form_target_framework">Target Framework of Your Project</label>
+                    <input type="text" class="form-control" id="form_target_framework" required />
+                </div>
+                <!-- Disabled until scripts loading completes -->
+                <button type="submit" class="btn btn-primary" id="form_submit" disabled
+                        data-bind="text: isWorking() ? 'Working...' : 'Check', attr: {disabled: isWorking}">
+                    Check
+                </button>
+            </form>
+
+            <section id="result" class="display-none" data-bind="with: result, visible: !result().noResult">
+                <p data-bind="visible: error">An error caused.</p>
+                <div data-bind="visible: !error">
+                    <h2 data-bind="text: packageId + ' ' + packageVersion"></h2>
+                    <p data-bind="visible: matchingFramework == null">No compatible framework</p>
+                    <div data-bind="visible: matchingFramework != null">
+                        NuGet Package Manager will install
+                        <pre data-bind="text: matchingFramework"></pre>
+                    </div>
+                </div>
+            </section>
+        </section>
+
+        <section>
+            <h1>For Local Packages</h1>
+            <p>
+                You can use NuGetCalc CLI version.
+                <a href="https://github.com/azyobuzin/NuGetCalc">Visit GitHub</a> and clone.
+            </p>
+        </section>
+    </div>
+
+    <hr />
+
+    <footer class="container">
+        <p>
+            ©2015 <a href="http://azyobuzi.net/">azyobuzin</a> /
+            <a href="https://github.com/azyobuzin/NuGetCalcWeb">Fork me on GitHub</a>
+        </p>
+    </footer>
+
+    <script src="http://code.jquery.com/jquery-2.1.3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.3.0/knockout-min.js"></script>
+    <script src="content/index.js" async defer></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js" async defer></script>
+</body>
+</html>
