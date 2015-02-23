@@ -1,13 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Net;
 using System.Reflection;
 using System.Runtime.Versioning;
+using System.Threading;
 using System.Threading.Tasks;
 using NuGet;
+using NuGet.Client;
+using NuGet.Data;
+using NuGet.PackagingCore;
+using NuGet.Versioning;
 
 namespace NuGetCalcWeb
 {
@@ -32,26 +37,39 @@ namespace NuGetCalcWeb
             return getProfileCompatbility(projectFrameworkName, packageTargetFrameworkName);
         }
 
-        public static async Task<DownloadedNuGetPackage> DownloadPackage(string package, string version)
+        private static DataClient dataClient = new DataClient();
+        private static V3RegistrationResource registrationResource =
+            new V3RegistrationResource(dataClient, new Uri("https://api.nuget.org/v3/registration0/"));
+        private static V3MetadataResource metadataResource = new V3MetadataResource(dataClient, registrationResource);
+        private static V3DownloadResource downloadResource = new V3DownloadResource(dataClient, registrationResource);
+
+        public static async Task<ZipPackage> DownloadPackage(string package, string version)
         {
-            var tmpFile = Path.GetTempFileName();
-            try
+            var nversion = version != null
+                ? new NuGetVersion(version)
+                : await metadataResource.GetLatestVersion(package, true, false, CancellationToken.None).ConfigureAwait(false);
+
+            var tmpFile = PackageTempFiles.Get(package, nversion);
+            if (tmpFile == null)
             {
-                using (var wc = new WebClient())
+                Debug.WriteLine("Downloading {0} {1}", package, nversion);
+                try
                 {
-                    var uri = "https://www.nuget.org/api/v2/package/" + (version != null
-                        ? string.Format("{0}/{1}", package, version)
-                        : package
-                    );
-                    await wc.DownloadFileTaskAsync(uri, tmpFile).ConfigureAwait(false);
+                    tmpFile = Path.GetTempFileName();
+                    using (var pkgStream = await downloadResource.GetStream(new PackageIdentity(package, nversion), CancellationToken.None).ConfigureAwait(false))
+                    using (var tmpStream = new FileStream(tmpFile, FileMode.Create, FileAccess.Write))
+                    {
+                        await pkgStream.CopyToAsync(tmpStream).ConfigureAwait(false);
+                    }
+                    PackageTempFiles.Add(package, nversion, tmpFile);
+                }
+                catch
+                {
+                    File.Delete(tmpFile);
+                    throw;
                 }
             }
-            catch
-            {
-                File.Delete(tmpFile);
-                throw;
-            }
-            return new DownloadedNuGetPackage(tmpFile);
+            return new ZipPackage(tmpFile);
         }
 
         public static IEnumerable<Compatibility> GetCompatibilities(IPackage package, string targetFrameworkName)
@@ -64,7 +82,8 @@ namespace NuGetCalcWeb
                 .Select(f => new Compatibility
                 {
                     Framework = f,
-                    Score = GetProfileCompatibility(target, f)
+                    Score = GetProfileCompatibility(target, f),
+                    PackageDependencies = package.GetCompatiblePackageDependencies(f).ToArray()
                 })
                 .OrderByDescending(c => c.Score);
         }

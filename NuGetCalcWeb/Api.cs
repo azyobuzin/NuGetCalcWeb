@@ -11,18 +11,15 @@ namespace NuGetCalcWeb
             return "pong";
         }
 
-        public async Task<CompatibilitiesResult> Compatibilities(string package, string targetFramework, string packageVersion = null)
+        public async Task<CompatibilitiesResult> Compatibilities(string packageId, string targetFramework, string packageVersion = null)
         {
-            using (var packageRef = await NuGetUtility.DownloadPackage(package, packageVersion))
+            var package = await NuGetUtility.DownloadPackage(packageId, packageVersion);
+            return new CompatibilitiesResult()
             {
-                return new CompatibilitiesResult()
-                {
-                    PackageId = packageRef.Package.Id,
-                    PackageTitle = packageRef.Package.Title,
-                    PackageVersion = packageRef.Package.Version.ToString(),
-                    Compatibilities = NuGetUtility.GetCompatibilities(packageRef.Package, targetFramework).ToArray()
-                };
-            }
+                PackageId = package.Id,
+                PackageVersion = package.Version,
+                Compatibilities = NuGetUtility.GetCompatibilities(package, targetFramework).ToArray()
+            };
         }
     }
 }
