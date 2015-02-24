@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Owin;
@@ -27,8 +26,7 @@ namespace NuGetCalcWeb
             if (adEnv != null && File.Exists(adEnv))
                 ad = File.ReadAllText(adEnv);
 
-            var index = File.ReadAllText(Path.Combine(
-                Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "index.html"));
+            var index = File.ReadAllText("index.html");
             index = index.Replace("<script>/*Analytics*/</script>", analytics)
                 .Replace("<script>/*Ad*/</script>", ad);
 

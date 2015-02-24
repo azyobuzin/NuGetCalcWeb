@@ -1,6 +1,4 @@
-﻿using System.IO;
-using System.Reflection;
-using LightNode.Formatter;
+﻿using LightNode.Formatter;
 using LightNode.Server;
 using Microsoft.Owin;
 using Microsoft.Owin.FileSystems;
@@ -20,8 +18,7 @@ namespace NuGetCalcWeb
             app.UseStaticFiles(new StaticFileOptions()
             {
                 RequestPath = new PathString("/content"),
-                FileSystem = new PhysicalFileSystem(Path.Combine(
-                    Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "content"))
+                FileSystem = new PhysicalFileSystem("content")
             });
 
             app.UseLightNode(new LightNodeOptions(AcceptVerbs.Get, new JsonNetContentFormatter())
