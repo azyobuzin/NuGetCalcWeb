@@ -1,7 +1,7 @@
 FROM azyobuzin/mono:eventsourcepatch
 MAINTAINER azyobuzin <azyobuzin@users.sourceforge.jp>
 
-ADD analytics.html ad.html /
+ADD http://junk.azyobuzi.net/nugetcalcweb/analytics.html http://junk.azyobuzi.net/nugetcalcweb/ad.html /
 
 RUN git clone https://github.com/azyobuzin/NuGetCalcWeb.git
 WORKDIR /NuGetCalcWeb
