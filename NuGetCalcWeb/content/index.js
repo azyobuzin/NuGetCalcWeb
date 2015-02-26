@@ -1,4 +1,7 @@
-﻿function NuGetCalcWeb() {
+﻿/// <reference path="../Scripts/jquery-2.1.3.js" />
+/// <reference path="../Scripts/knockout-3.2.0.debug.js" />
+
+function NuGetCalcWeb() {
     this.getCompatibilities = function (package_id, package_version, target_framework) {
         var deferred = new $.Deferred();
         $.getJSON("api/compatibilities", { packageId: package_id, packageVersion: package_version, targetFramework: target_framework })
@@ -12,7 +15,7 @@
                 deferred.reject();
             });
         return deferred.promise();
-    }
+    };
 }
 
 $(function () {
@@ -20,6 +23,7 @@ $(function () {
 
     function MainViewModel() {
         var self = this;
+
         self.isWorking = ko.observable(false);
         self.resultVisibility = ko.observable(false);
         self.getCompatibilities = function () {
