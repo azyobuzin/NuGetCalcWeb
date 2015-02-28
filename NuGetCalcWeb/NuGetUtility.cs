@@ -55,7 +55,7 @@ namespace NuGetCalcWeb
                 Debug.WriteLine("Downloading {0} {1}", package, nversion);
                 try
                 {
-                    tmpFile = Path.GetTempFileName();
+                    tmpFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
                     using (var pkgStream = await downloadResource.GetStream(new PackageIdentity(package, nversion), CancellationToken.None).ConfigureAwait(false))
                     using (var tmpStream = new FileStream(tmpFile, FileMode.Create, FileAccess.Write))
                     {

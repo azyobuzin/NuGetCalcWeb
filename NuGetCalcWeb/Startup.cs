@@ -13,7 +13,7 @@ namespace NuGetCalcWeb
     {
         public void Configuration(IAppBuilder app)
         {
-            app.Use<IndexMiddleware>();
+            app.Use<NuGetCalcWebMiddleware>();
 
             app.UseStaticFiles(new StaticFileOptions()
             {
@@ -23,8 +23,8 @@ namespace NuGetCalcWeb
 
             app.UseLightNode(new LightNodeOptions(AcceptVerbs.Get, new JsonNetContentFormatter())
             {
-                ErrorHandlingPolicy = ErrorHandlingPolicy.ReturnInternalServerErrorIncludeErrorDetails,
-                OperationMissingHandlingPolicy = OperationMissingHandlingPolicy.ReturnErrorStatusCodeIncludeErrorDetails,
+                ErrorHandlingPolicy = ErrorHandlingPolicy.ThrowException,
+                OperationMissingHandlingPolicy = OperationMissingHandlingPolicy.ThrowException,
                 UseOtherMiddleware = true
             });
         }
