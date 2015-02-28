@@ -35,6 +35,8 @@ $(function () {
                     vm.packageVersion = data.PackageVersion;
                     if (data.Compatibilities.length > 0) {
                         vm.matchingFramework = data.Compatibilities[0].Framework.FullName;
+                        vm.dependencies = data.Compatibilities[0].PackageDependencies;
+                        vm.detail = data.Compatibilities;
                     }
                     self.result(vm);
                 })
@@ -55,6 +57,7 @@ $(function () {
         this.packageId = null;
         this.packageVersion = null;
         this.matchingFramework = null;
+        this.dependencies = null;
         this.detail = null;
         this.error = false;
     }

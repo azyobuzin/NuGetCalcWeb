@@ -115,8 +115,10 @@ namespace NuGetCalcWeb
                 }
                 else
                 {
-                    context.Response.ContentType = "application/json";
-                    context.Response.Write(JsonConvert.SerializeObject(new { error = header, detail = detail }));
+                    var bytes = encoding.GetBytes(JsonConvert.SerializeObject(new { error = header, detail = detail }));
+                    context.Response.ContentType = "application/json; charset=utf-8";
+                    context.Response.ContentLength = bytes.LongLength;
+                    context.Response.Write(bytes);
                 }
             }
         }
