@@ -1,12 +1,11 @@
+# Please build this after building binaries
+
 FROM azyobuzin/mono:eventsourcepatch
 MAINTAINER azyobuzin <azyobuzin@users.sourceforge.jp>
 
 ADD http://junk.azyobuzi.net/nugetcalcweb/analytics.html http://junk.azyobuzi.net/nugetcalcweb/ad.html /
 
-RUN git clone https://github.com/azyobuzin/NuGetCalcWeb.git
-WORKDIR /NuGetCalcWeb
-RUN mono ./.nuget/NuGet.exe restore
-RUN xbuild /p:Configuration=Release
+COPY . /NuGetCalcWeb/
 
 WORKDIR /NuGetCalcWeb/NuGetCalcWeb
 ENV NUGETCALC_ANALYTICS /analytics.html
