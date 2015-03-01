@@ -1,7 +1,7 @@
-﻿footer {
-    text-align: center;
+﻿.display-none {
+    display: none;
 }
 
-.display-none {
-    display: none;
+.tt-dropdown-menu {
+    width: 100%;
 }

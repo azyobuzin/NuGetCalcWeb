@@ -1,10 +1,12 @@
 ﻿/// <reference path="../Scripts/jquery-2.1.3.js" />
 /// <reference path="../Scripts/knockout-3.2.0.debug.js" />
+/// <reference path="../Scripts/typeahead.bundle.js" />
 
 function NuGetCalcWeb() {
     this.getCompatibilities = function (package_id, package_version, target_framework) {
         var deferred = new $.Deferred();
-        $.getJSON("api/compatibilities", { packageId: package_id, packageVersion: package_version, targetFramework: target_framework })
+        $.getJSON("api/compatibilities.json",
+            { packageId: package_id, packageVersion: package_version, targetFramework: target_framework })
             .done(function (data) {
                 deferred.resolve(data);
             })
@@ -65,6 +67,44 @@ function NuGetCalcWeb() {
         }
         return result;
     };
+
+    this.packageAutocomplete = function (query) {
+        var deferred = new $.Deferred();
+        $.getJSON("internalApi/autocomplete.json", { q: query })
+            .done(function (data) {
+                deferred.resolve(data);
+            })
+            .fail(function (jqXHR, textStatus, errorThrown) {
+                console.error(textStatus);
+                console.error(errorThrown);
+                deferred.reject();
+            });
+        return deferred.promise();
+    };
+
+    var versionCache = {};
+    var queryFilter = function (versions, query) {
+        return versions.filter(function (x) { return x.value.contains(query); });
+    };
+    this.versionAutocomplete = function (package, query) {
+        var deferred = new $.Deferred();
+        var versions = versionCache[package];
+        if (versions) {
+            deferred.resolve(queryFilter(versions, query));
+        } else {
+            $.getJSON("internalApi/versionAutocomplete.json", { package: package })
+                .done(function (data) {
+                    versionCache[package] = data;
+                    deferred.resolve(queryFilter(data, query));
+                })
+                .fail(function (jqXHR, textStatus, errorThrown) {
+                    console.error(textStatus);
+                    console.error(errorThrown);
+                    deferred.reject();
+                });
+        }
+        return deferred.promise();
+    }
 }
 
 $(function () {
@@ -123,6 +163,20 @@ $(function () {
     ko.applyBindings(new MainViewModel());
 
     $("#result").removeClass("display-none");
+
+    $("#form_package_id").typeahead({}, {
+        source: function (query, cb) {
+            core.packageAutocomplete(query).done(cb);
+        }
+    });
+    $("#form_package_version").typeahead({}, {
+        source: function (query, cb) {
+            var val = $("#form_package_id").typeahead("val");
+            if (val) {
+                core.versionAutocomplete(val, query).done(cb);
+            }
+        }
+    });
 });
 
 /*
