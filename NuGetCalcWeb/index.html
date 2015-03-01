@@ -66,7 +66,7 @@
                             <div data-bind="visible: dependencies != null && dependencies.length > 0">
                                 with the following dependent packages
                                 <ul data-bind="foreach: dependencies">
-                                    <li data-bind="text: Id"></li>
+                                    <li data-bind="text: $data"></li>
                                 </ul>
                             </div>
                         </section>
@@ -75,8 +75,8 @@
                             <h3>Scores</h3>
                             <ul data-bind="foreach: detail">
                                 <li>
-                                    <span data-bind ="text: Framework.FullName"></span>:
-                                    <span data-bind="text: Score"></span>
+                                    <span data-bind ="text: framework"></span>:
+                                    <span data-bind="text: score"></span>
                                 </li>
                             </ul>
                         </section>
