@@ -70,9 +70,9 @@ function NuGetCalcWeb() {
 
     this.packageAutocomplete = function (query) {
         var deferred = new $.Deferred();
-        $.getJSON("internalApi/autocomplete.json", { q: query })
+        $.getJSON("https://api-v3search-0.nuget.org/autocomplete?callback=?", { q: query })
             .done(function (data) {
-                deferred.resolve(data);
+                deferred.resolve(data.data.map(function (x) { return { value: x }; }));
             })
             .fail(function (jqXHR, textStatus, errorThrown) {
                 console.error(textStatus);
@@ -86,15 +86,17 @@ function NuGetCalcWeb() {
     var queryFilter = function (versions, query) {
         return versions.filter(function (x) { return x.value.contains(query); });
     };
-    this.versionAutocomplete = function (package, query) {
+    this.versionAutocomplete = function (packageId, query) {
         var deferred = new $.Deferred();
-        var versions = versionCache[package];
+        packageId = packageId.toLowerCase();
+        var versions = versionCache[packageId];
         if (versions) {
             deferred.resolve(queryFilter(versions, query));
         } else {
-            $.getJSON("internalApi/versionAutocomplete.json", { package: package })
-                .done(function (data) {
-                    versionCache[package] = data;
+            $.getJSON("https://api-v3search-0.nuget.org/autocomplete?callback=?", { id: packageId })
+                .done(function (res) {
+                    var data = res.data.map(function (x) { return { value: x }; });
+                    versionCache[packageId] = data;
                     deferred.resolve(queryFilter(data, query));
                 })
                 .fail(function (jqXHR, textStatus, errorThrown) {

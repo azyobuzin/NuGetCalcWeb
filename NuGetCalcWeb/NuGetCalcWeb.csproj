@@ -153,7 +153,6 @@
   <ItemGroup>
     <Compile Include="Api.cs" />
     <Compile Include="Compatibility.cs" />
-    <Compile Include="InternalApi.cs" />
     <Compile Include="NuGetCalcWebMiddleware.cs" />
     <Compile Include="NuGetUtility.cs" />
     <Compile Include="PackageTempFiles.cs" />
