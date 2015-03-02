@@ -1,1 +1,1 @@
-docker build -t azyobuzin/nugetcalcweb .
+docker build -t azyobuzin/nugetcalcweb:%RANDOM% .

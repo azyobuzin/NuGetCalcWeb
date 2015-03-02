@@ -18,10 +18,40 @@ function NuGetCalcWeb() {
         return deferred.promise();
     };
 
+    var frameworkTable = {
+        ".netframework": "net",
+        ".netcore": "netcore",
+        ".netmicroframework": "netmf",
+        "silverlight": "sl",
+        ".netportable": "portable",
+        "windowsphone": "wp",
+        "windowsphoneapp": "wpa",
+        "windows": "win",
+        "asp.net": "aspnet",
+        "asp.netcore": "aspnetcore"
+    };
+    var simplifyFramework = function (framework) {
+        var result = frameworkTable[framework.toLowerCase()];
+        return result ? result : framework;
+    };
+
+    var profileTable = {
+        "client": "client",
+        "windowsphone": "wp",
+        "windowsphone71": "wp71",
+        "compactframework": "cf",
+        "full": ""
+    };
+    var simplifyProfile = function (profile) {
+        var result = profileTable[profile.toLowerCase()];
+        return result ? result : profile;
+    }
+
     this.frameworkString = function (framework) {
-        var result = framework.Identifier;
-        if (framework.Profile) {
-            result += "-" + framework.Profile;
+        var result = simplifyFramework(framework.Identifier);
+        var profile = simplifyProfile(framework.Profile);
+        if (profile) {
+            result += "-" + profile;
         }
         var v = framework.Version;
         if (v.Major != -1 && !(v.Major == 0 && v.Minor == 0 && v.Build == -1)) {
