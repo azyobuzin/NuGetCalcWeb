@@ -9,12 +9,11 @@ using System.Threading.Tasks;
 using LightNode.Server;
 using Microsoft.Owin;
 using Newtonsoft.Json;
+using NuGetCalcWeb.ViewModels;
 
 namespace NuGetCalcWeb
 {
-    using AppFunc = Func<IDictionary<string, object>, Task>;
-
-    public class NuGetCalcWebMiddleware
+    public class NuGetCalcWebMiddleware : OwinMiddleware
     {
         private static readonly Encoding encoding = new UTF8Encoding(false);
         private static readonly byte[] content;
@@ -39,16 +38,10 @@ namespace NuGetCalcWeb
             content = encoding.GetBytes(index);
         }
 
-        public NuGetCalcWebMiddleware(AppFunc next)
+        public NuGetCalcWebMiddleware(OwinMiddleware next) : base(next) { }
+        
+        public override async Task Invoke(IOwinContext context)
         {
-            this.next = next;
-        }
-
-        private AppFunc next;
-
-        public async Task Invoke(IDictionary<string, object> environment)
-        {
-            var context = new OwinContext(environment);
             try
             {
                 switch (context.Request.Path.Value)
@@ -60,7 +53,7 @@ namespace NuGetCalcWeb
                         IndexHtml(context);
                         break;
                     default:
-                        await this.next(environment).ConfigureAwait(false);
+                        await this.Next.Invoke(context).ConfigureAwait(false);
                         break;
                 }
             }
@@ -71,54 +64,41 @@ namespace NuGetCalcWeb
                     && accept.Any(x => x.StartsWith("text/html", StringComparison.OrdinalIgnoreCase));
 
                 int statusCode;
-                string header;
-                string detail = null;
+                var model = new ErrorModel();
 
                 if (ex is MethodNotAllowdException)
                 {
                     statusCode = 405;
-                    header = "MethodNotAllowed";
-                    detail = (ex as MethodNotAllowdException).Method + " method is not allowed";
+                    model.Header = "MethodNotAllowed";
+                    model.Detail = (ex as MethodNotAllowdException).Method + " method is not allowed";
                 }
                 else if (ex is OperationNotFoundException)
                 {
                     statusCode = 404;
-                    header = "NotFound";
+                    model.Header = "NotFound";
                 }
                 else if (ex is OperationMissingException)
                 {
                     statusCode = 400;
-                    header = "BadRequest";
-                    detail = ex.ToString();
+                    model.Header = "BadRequest";
+                    model.Detail = ex.ToString();
                 }
                 else
                 {
                     Trace.TraceError("{0}: {1}", context.Request.Path, ex);
                     statusCode = 500;
-                    header = "InternalServerError";
-                    detail = ex.ToString();
+                    model.Header = "InternalServerError";
+                    model.Detail = ex.ToString();
                 }
 
                 context.Response.StatusCode = statusCode;
                 if (isHtmlRequired)
                 {
-                    var content = File.ReadAllText("error.html")
-                        .Replace("<!--Header-->", header);
-                    if (detail != null)
-                        content = content.Replace("<!--Content-->",
-                            string.Format("<pre>{0}</pre>", WebUtility.HtmlEncode(detail)));
-                    var bytes = encoding.GetBytes(content);
-
-                    context.Response.ContentType = "text/html; charset=utf-8";
-                    context.Response.ContentLength = bytes.LongLength;
-                    context.Response.Write(bytes);
+                    context.Response.View("Error", model);
                 }
                 else
                 {
-                    var bytes = encoding.GetBytes(JsonConvert.SerializeObject(new { error = header, detail = detail }));
-                    context.Response.ContentType = "application/json; charset=utf-8";
-                    context.Response.ContentLength = bytes.LongLength;
-                    context.Response.Write(bytes);
+                    context.Response.Json(model);
                 }
             }
         }

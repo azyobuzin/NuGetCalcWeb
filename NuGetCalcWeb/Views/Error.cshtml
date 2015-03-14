@@ -17,8 +17,11 @@
     </header>
 
     <div class="container">
-        <h1><!--Header--></h1>
-        <!--Content-->
+        <h1>@Model.Header</h1>
+        @if (!string.IsNullOrEmpty(Model.Detail))
+        {
+            <pre>@Model.Detail</pre>
+        }
     </div>
 </body>
 </html>

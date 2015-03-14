@@ -155,7 +155,6 @@
     <Content Include="content\index.js" />
     <Content Include="content\style.css" />
     <Content Include="content\typeaheadjs.css" />
-    <Content Include="error.html" />
     <Content Include="index.html" />
     <Content Include="packages.config">
       <SubType>Designer</SubType>
@@ -166,6 +165,7 @@
     <Content Include="Scripts\jquery-2.1.3.js" />
     <Content Include="Scripts\jquery-2.1.3.min.js" />
     <Content Include="Scripts\jquery-2.1.3.min.map" />
+    <Content Include="Views\Error.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -190,6 +190,8 @@
     <Compile Include="PackageTempFiles.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Startup.cs" />
+    <Compile Include="ResponseHelper.cs" />
+    <Compile Include="ViewModels\ErrorModel.cs" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
