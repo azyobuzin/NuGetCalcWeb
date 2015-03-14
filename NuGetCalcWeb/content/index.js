@@ -1,5 +1,5 @@
 ﻿/// <reference path="../Scripts/jquery-2.1.3.js" />
-/// <reference path="../Scripts/knockout-3.2.0.debug.js" />
+/// <reference path="../Scripts/knockout-3.3.0.debug.js" />
 /// <reference path="../Scripts/typeahead.bundle.js" />
 
 function NuGetCalcWeb() {
