@@ -1,4 +1,6 @@
-﻿<!DOCTYPE html>
+﻿@using NuGetCalcWeb.ViewModels;
+@inherits RazorEngine.Templating.TemplateBase
+<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8" />
@@ -8,7 +10,7 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" />
     <link rel="stylesheet" href="content/typeaheadjs.css" />
     <link rel="stylesheet" href="content/style.css" />
-    <script>/*Analytics*/</script>
+    @ExternalSnippets.Default.Analytics
 </head>
 <body>
     <header class="navbar navbar-default navbar-static-top">
@@ -34,7 +36,7 @@
     <div class="container">
         <section>
             <h1>Find Matching Framework</h1>
-            <script>/*Ad*/</script>
+            @ExternalSnippets.Default.AdTop
             <form id="compatibilities_form" data-bind="submit: getCompatibilities">
                 <div class="form-group">
                     <label for="form_package_id">Package ID</label>
@@ -76,7 +78,7 @@
                             <h3>Scores</h3>
                             <ul data-bind="foreach: detail">
                                 <li>
-                                    <span data-bind ="text: framework"></span>:
+                                    <span data-bind="text: framework"></span>:
                                     <span data-bind="text: score"></span>
                                 </li>
                             </ul>

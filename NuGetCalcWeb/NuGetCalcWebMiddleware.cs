@@ -16,30 +16,9 @@ namespace NuGetCalcWeb
     public class NuGetCalcWebMiddleware : OwinMiddleware
     {
         private static readonly Encoding encoding = new UTF8Encoding(false);
-        private static readonly byte[] content;
-        private static readonly string etag = Guid.NewGuid().ToString("N");
-
-        static NuGetCalcWebMiddleware()
-        {
-            var analytics = "";
-            var analyticsEnv = Environment.GetEnvironmentVariable("NUGETCALC_ANALYTICS");
-            if (analyticsEnv != null && File.Exists(analyticsEnv))
-                analytics = File.ReadAllText(analyticsEnv);
-
-            var ad = "";
-            var adEnv = Environment.GetEnvironmentVariable("NUGETCALC_AD");
-            if (adEnv != null && File.Exists(adEnv))
-                ad = File.ReadAllText(adEnv);
-
-            var index = File.ReadAllText("index.html");
-            index = index.Replace("<script>/*Analytics*/</script>", analytics)
-                .Replace("<script>/*Ad*/</script>", ad);
-
-            content = encoding.GetBytes(index);
-        }
 
         public NuGetCalcWebMiddleware(OwinMiddleware next) : base(next) { }
-        
+
         public override async Task Invoke(IOwinContext context)
         {
             try
@@ -47,7 +26,7 @@ namespace NuGetCalcWeb
                 switch (context.Request.Path.Value)
                 {
                     case "/":
-                        await Index(context).ConfigureAwait(false);
+                        Index(context);
                         break;
                     case "/index.html":
                         IndexHtml(context);
@@ -103,19 +82,10 @@ namespace NuGetCalcWeb
             }
         }
 
-        private async Task Index(IOwinContext context)
+        private void Index(IOwinContext context)
         {
-            var etags = context.Request.Headers.GetCommaSeparatedValues("If-None-Match");
-            if (etags != null && etags.Contains(etag))
-            {
-                context.Response.StatusCode = 304;
-                return;
-            }
-
-            context.Response.ETag = etag;
-            context.Response.ContentType = "text/html; charset=utf-8";
-            context.Response.ContentLength = content.LongLength;
-            await context.Response.WriteAsync(content).ConfigureAwait(false);
+            //TODO: caching
+            context.Response.View("Index");
         }
 
         private void IndexHtml(IOwinContext context)

@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Text;
 using Microsoft.Owin;
 using Newtonsoft.Json;
@@ -11,22 +12,29 @@ namespace NuGetCalcWeb
     {
         private static UTF8Encoding encoding = new UTF8Encoding(false);
 
-        public static void View<T>(this IOwinResponse response, string viewName, T model)
+        private static void View(IOwinResponse response, string viewName, Type modelType, object model)
         {
             response.ContentType = "text/html; charset=utf-8";
             using (var writer = new StreamWriter(response.Body, encoding))
             {
                 var service = Engine.Razor;
-                if (service.IsTemplateCached(viewName, typeof(T)))
-                {
-                    service.Run(viewName, writer, typeof(T), model);
-                }
+                if (service.IsTemplateCached(viewName, modelType))
+                    service.Run(viewName, writer, modelType, model);
                 else
-                {
-                    var source = File.ReadAllText(Path.Combine("Views", viewName + ".cshtml"));
-                    service.RunCompile(source, viewName, writer, typeof(T), model);
-                }
+                    service.RunCompile(
+                        File.ReadAllText(Path.Combine("Views", viewName + ".cshtml")),
+                        viewName, writer, modelType, model);
             }
+        }
+
+        public static void View<T>(this IOwinResponse response, string viewName, T model)
+        {
+            View(response, viewName, typeof(T), model);
+        }
+
+        public static void View(this IOwinResponse response, string viewName)
+        {
+            View(response, viewName, null, null);
         }
 
         public static void Json(this IOwinResponse response, object value)
