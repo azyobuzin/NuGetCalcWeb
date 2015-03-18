@@ -1,0 +1,30 @@
+﻿<form id="form-browse" action="~/browse" method="get">
+    <div class="form-group">
+        <label for="package-source">Source</label>
+        <input id="package-source" name="source" type="url" class="form-control" placeholder="https://api.nuget.org/v3/index.json" />
+    </div>
+    <div class="form-group">
+        <label for="package-id">Package ID</label>
+        <input id="package-id" name="packageId" type="text" class="form-control" required />
+    </div>
+    <div class="form-group">
+        <label for="package-version">Version</label>
+        <input id="package-version" name="version" type="text" class="form-control" placeholder="the latest version" />
+    </div>
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">Browse files in the package</button>
+    </div>
+</form>
+<form id="form-compatilibity" action="~/compatibility" method="get">
+    <input type="hidden" id="compatibility-source" name="source" />
+    <input type="hidden" id="compatibility-id" name="packageId" />
+    <input type="hidden" id="compatibility-version" name="version" />
+    <div class="form-group">
+        <label for="compatibility-target-framework">Target Framework of Your Project</label>
+        <input id="compatibility-target-framework" name="targetFramework" type="text" class="form-control" required />
+    </div>
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">Find the most compatible assemblies</button>
+    </div>
+</form>
+<script src="~/content/pkgselector.js"></script>

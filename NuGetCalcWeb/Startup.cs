@@ -1,6 +1,4 @@
-﻿using LightNode.Formatter;
-using LightNode.Server;
-using Microsoft.Owin;
+﻿using Microsoft.Owin;
 using Microsoft.Owin.FileSystems;
 using Microsoft.Owin.StaticFiles;
 using Owin;
@@ -19,13 +17,6 @@ namespace NuGetCalcWeb
             {
                 RequestPath = new PathString("/content"),
                 FileSystem = new PhysicalFileSystem("content")
-            });
-
-            app.UseLightNode(new LightNodeOptions(AcceptVerbs.Get, new JsonNetContentFormatter())
-            {
-                ErrorHandlingPolicy = ErrorHandlingPolicy.ThrowException,
-                OperationMissingHandlingPolicy = OperationMissingHandlingPolicy.ThrowException,
-                UseOtherMiddleware = true
             });
         }
     }

@@ -6,7 +6,6 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using LightNode.Server;
 using Microsoft.Owin;
 using Newtonsoft.Json;
 using NuGetCalcWeb.ViewModels;
@@ -21,62 +20,36 @@ namespace NuGetCalcWeb
 
         public override async Task Invoke(IOwinContext context)
         {
+            var error = new ErrorModel();
             try
             {
                 switch (context.Request.Path.Value)
                 {
                     case "/":
                         Index(context);
-                        break;
-                    default:
-                        await this.Next.Invoke(context).ConfigureAwait(false);
-                        break;
+                        return;
                 }
+
+                error.StatusCode = 404;
+                error.Header = "Not Found";
             }
             catch (Exception ex)
             {
-                var accept = context.Request.Headers.GetCommaSeparatedValues("Accept");
-                var isHtmlRequired = accept != null
-                    && accept.Any(x => x.StartsWith("text/html", StringComparison.OrdinalIgnoreCase));
-
-                int statusCode;
-                var model = new ErrorModel();
-
-                if (ex is MethodNotAllowdException)
-                {
-                    statusCode = 405;
-                    model.Header = "MethodNotAllowed";
-                    model.Detail = (ex as MethodNotAllowdException).Method + " method is not allowed";
-                }
-                else if (ex is OperationNotFoundException)
-                {
-                    statusCode = 404;
-                    model.Header = "NotFound";
-                }
-                else if (ex is OperationMissingException)
-                {
-                    statusCode = 400;
-                    model.Header = "BadRequest";
-                    model.Detail = ex.ToString();
-                }
-                else
-                {
-                    Trace.TraceError("{0}: {1}", context.Request.Path, ex);
-                    statusCode = 500;
-                    model.Header = "InternalServerError";
-                    model.Detail = ex.ToString();
-                }
-
-                context.Response.StatusCode = statusCode;
-                if (isHtmlRequired)
-                {
-                    context.Response.View("Error", model);
-                }
-                else
-                {
-                    context.Response.Json(model);
-                }
+                Trace.TraceError("{0}: {1}", context.Request.Path, ex);
+                error.StatusCode = 500;
+                error.Header = "Internal Server Error";
+                error.Detail = ex.ToString();
             }
+
+            context.Response.StatusCode = error.StatusCode;
+
+            var accept = context.Request.Headers.GetCommaSeparatedValues("Accept");
+            var isHtmlRequired = accept != null
+                && accept.Any(x => x.StartsWith("text/html", StringComparison.OrdinalIgnoreCase));
+            if (isHtmlRequired)
+                context.Response.View("Error", error);
+            else
+                context.Response.Json(error);
         }
 
         private void Index(IOwinContext context)

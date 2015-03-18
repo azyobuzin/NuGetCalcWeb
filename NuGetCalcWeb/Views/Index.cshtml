@@ -8,91 +8,23 @@
     <meta name="description" content="Finds which assembly NuGet adds to your project" />
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/content/typeaheadjs.css" />
+    <!--<link rel="stylesheet" href="~/content/typeaheadjs.css" />-->
     <link rel="stylesheet" href="~/content/style.css" />
     @ExternalSnippets.Default.Analytics
+    <script src="http://code.jquery.com/jquery-2.1.3.min.js"></script>
 </head>
 <body>
-    <header class="navbar navbar-default navbar-static-top">
-        <div class="container">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <span class="navbar-brand">NuGetCalc</span>
-            </div>
-            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-                <ul class="nav navbar-nav navbar-right">
-                    <li><a href="https://github.com/azyobuzin/NuGetCalc">CLI Version</a></li>
-                    <li><a href="https://github.com/azyobuzin/NuGetCalcWeb">Fork me on GitHub</a></li>
-                </ul>
-            </div>
-        </div>
-    </header>
+    @Include("_Header")
 
     <div class="container">
         <section>
-            <h1>Find Matching Framework</h1>
+            <h1>Find The Most Compatible Reference Assemblies</h1>
             @ExternalSnippets.Default.AdTop
-            <form id="compatibilities_form" data-bind="submit: getCompatibilities">
-                <div class="form-group">
-                    <label for="form_package_id">Package ID</label>
-                    <input type="text" class="form-control" id="form_package_id" required />
-                </div>
-                <div class="form-group">
-                    <label for="form_package_version">Version</label>
-                    <input type="text" class="form-control" id="form_package_version" placeholder="the latest version" />
-                </div>
-                <div class="form-group">
-                    <label for="form_target_framework">Target Framework of Your Project</label>
-                    <input type="text" class="form-control" id="form_target_framework" required />
-                </div>
-                <!-- Disabled until scripts loading completes -->
-                <button type="submit" class="btn btn-primary" id="form_submit" disabled
-                        data-bind="text: isWorking() ? 'Working...' : 'Check', disable: isWorking">
-                    Check
-                </button>
-            </form>
-
-            <section id="result" class="display-none" data-bind="with: result, visible: !result().noResult">
-                <p data-bind="visible: error">An error caused.</p>
-                <div data-bind="visible: !error">
-                    <h2 data-bind="text: packageId + ' ' + packageVersion"></h2>
-                    <p data-bind="visible: matchingFramework == null">No compatible framework</p>
-                    <div data-bind="visible: matchingFramework != null">
-                        <section>
-                            NuGet Package Manager will install
-                            <pre data-bind="text: matchingFramework"></pre>
-                            <div data-bind="visible: dependencies != null && dependencies.length > 0">
-                                with the following dependent packages
-                                <ul data-bind="foreach: dependencies">
-                                    <li data-bind="text: $data"></li>
-                                </ul>
-                            </div>
-                        </section>
-
-                        <section>
-                            <h3>Scores</h3>
-                            <ul data-bind="foreach: detail">
-                                <li>
-                                    <span data-bind="text: framework"></span>:
-                                    <span data-bind="text: score"></span>
-                                </li>
-                            </ul>
-                        </section>
-                    </div>
-                </div>
-            </section>
+            @Include("_PackageSelector")
         </section>
     </div>
 
-    <script src="http://code.jquery.com/jquery-2.1.3.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.3.0/knockout-min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/typeahead.js/0.10.5/typeahead.bundle.min.js"></script>
-    <script src="~/content/index.js" async></script>
+    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/typeahead.js/0.10.5/typeahead.bundle.min.js"></script>-->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js" async></script>
 </body>
 </html>
