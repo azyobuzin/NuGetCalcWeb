@@ -28,9 +28,6 @@ namespace NuGetCalcWeb
                     case "/":
                         Index(context);
                         break;
-                    case "/index.html":
-                        IndexHtml(context);
-                        break;
                     default:
                         await this.Next.Invoke(context).ConfigureAwait(false);
                         break;
@@ -86,12 +83,6 @@ namespace NuGetCalcWeb
         {
             //TODO: caching
             context.Response.View("Index");
-        }
-
-        private void IndexHtml(IOwinContext context)
-        {
-            context.Response.StatusCode = 301;
-            context.Response.Headers.Set("Location", "/");
         }
     }
 }

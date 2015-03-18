@@ -3,7 +3,9 @@ using System.IO;
 using System.Text;
 using Microsoft.Owin;
 using Newtonsoft.Json;
-using RazorEngine;
+using NuGetCalcWeb.RazorSupport;
+using NuGetCalcWeb.ViewModels;
+using RazorEngine.Configuration;
 using RazorEngine.Templating;
 
 namespace NuGetCalcWeb
@@ -15,14 +17,19 @@ namespace NuGetCalcWeb
         private static void View(IOwinResponse response, string viewName, Type modelType, object model)
         {
             response.ContentType = "text/html; charset=utf-8";
+            using (var service = RazorEngineService.Create(new TemplateServiceConfiguration()
+            {
+                Activator = new AppTemplateActivator(response.Context),
+                BaseTemplateType = typeof(AppTemplateBase<>),
+                TemplateManager = AppTemplateManager.Default
+            }))
             using (var writer = new StreamWriter(response.Body, encoding))
             {
-                var service = Engine.Razor;
                 if (service.IsTemplateCached(viewName, modelType))
                     service.Run(viewName, writer, modelType, model);
                 else
                     service.RunCompile(
-                        File.ReadAllText(Path.Combine("Views", viewName + ".cshtml")),
+                        AppTemplateManager.ResolveView(viewName),
                         viewName, writer, modelType, model);
             }
         }

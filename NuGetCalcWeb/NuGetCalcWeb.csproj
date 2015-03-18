@@ -189,10 +189,13 @@
     <Compile Include="NuGetUtility.cs" />
     <Compile Include="PackageTempFiles.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RazorSupport\AppTemplateActivator.cs" />
+    <Compile Include="RazorSupport\AppTemplateManager.cs" />
     <Compile Include="Startup.cs" />
     <Compile Include="ResponseHelper.cs" />
     <Compile Include="ViewModels\ErrorModel.cs" />
     <Compile Include="ViewModels\ExternalSnippets.cs" />
+    <Compile Include="ViewModels\AppTemplateBase.cs" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
