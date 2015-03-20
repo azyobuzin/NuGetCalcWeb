@@ -1,15 +1,17 @@
-﻿<form id="form-browse" action="~/browse" method="get">
+﻿@using NuGetCalcWeb.ViewModels
+@inherits AppTemplateBase<PackageSelectorModel>
+<form id="form-browse" action="~/browse" method="get">
     <div class="form-group">
         <label for="package-source">Source</label>
-        <input id="package-source" name="source" type="url" class="form-control" placeholder="https://api.nuget.org/v3/index.json" />
+        <input id="package-source" name="source" type="url" class="form-control" value="@Model.DefaultSource" placeholder="https://api.nuget.org/v3/index.json" />
     </div>
     <div class="form-group">
         <label for="package-id">Package ID</label>
-        <input id="package-id" name="packageId" type="text" class="form-control" required />
+        <input id="package-id" name="packageId" type="text" class="form-control" value="@Model.DefaultPackageId" required />
     </div>
     <div class="form-group">
         <label for="package-version">Version</label>
-        <input id="package-version" name="version" type="text" class="form-control" placeholder="the latest version" />
+        <input id="package-version" name="version" type="text" class="form-control" value="@Model.DefaultVersion" placeholder="the latest version" />
     </div>
     <div class="form-group">
         <button type="submit" class="btn btn-primary">Browse files in the package</button>
@@ -21,7 +23,7 @@
     <input type="hidden" id="compatibility-version" name="version" />
     <div class="form-group">
         <label for="compatibility-target-framework">Target Framework of Your Project</label>
-        <input id="compatibility-target-framework" name="targetFramework" type="text" class="form-control" required />
+        <input id="compatibility-target-framework" name="targetFramework" type="text" class="form-control" value="@Model.DefaultTargetFramework" required />
     </div>
     <div class="form-group">
         <button type="submit" class="btn btn-primary">Find the most compatible assemblies</button>

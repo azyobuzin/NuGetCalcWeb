@@ -156,5 +156,4 @@ $RECYCLE.BIN/
 .DS_Store
 
 # NuGetCalcWeb user files
-ad.html
-analytics.html
+/NuGetCalcWeb/App_Data

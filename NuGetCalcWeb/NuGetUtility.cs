@@ -1,91 +1,140 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Runtime.Versioning;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using NuGet;
 using NuGet.Client;
-using NuGet.Data;
+using NuGet.Configuration;
+using NuGet.Frameworks;
+using NuGet.Packaging;
 using NuGet.PackagingCore;
 using NuGet.Versioning;
 
 namespace NuGetCalcWeb
 {
+    using Resources = Tuple<MetadataResource, DownloadResource>;
+
     public static class NuGetUtility
     {
-        private static Func<FrameworkName, FrameworkName, long> getProfileCompatbility;
-        public static long GetProfileCompatibility(FrameworkName projectFrameworkName, FrameworkName packageTargetFrameworkName)
-        {
-            if (getProfileCompatbility == null)
-            {
-                var arg0 = Expression.Parameter(typeof(FrameworkName), "projectFrameworkName");
-                var arg1 = Expression.Parameter(typeof(FrameworkName), "packageTargetFrameworkName");
-                getProfileCompatbility = Expression.Lambda<Func<FrameworkName, FrameworkName, long>>(
-                    Expression.Call(
-                        typeof(VersionUtility).GetMethod("GetProfileCompatibility", BindingFlags.NonPublic | BindingFlags.Static),
-                        arg0,
-                        arg1
-                    ),
-                    arg0, arg1).Compile();
-            }
+        private static ConcurrentDictionary<string, Resources> resourceCache = new ConcurrentDictionary<string, Resources>();
 
-            return getProfileCompatbility(projectFrameworkName, packageTargetFrameworkName);
+        private static Resources GetResources(string source)
+        {
+            return resourceCache.GetOrAdd(source, key =>
+            {
+                var repo = RepositoryFactory.Create(key);
+                return Tuple.Create(repo.GetResource<MetadataResource>(), repo.GetResource<DownloadResource>());
+            });
         }
 
-        private static DataClient dataClient = new DataClient();
-        private static V3RegistrationResource registrationResource =
-            new V3RegistrationResource(dataClient, new Uri("https://api.nuget.org/v3/registration0/"));
-        private static V3MetadataResource metadataResource = new V3MetadataResource(dataClient, registrationResource);
-        private static V3DownloadResource downloadResource = new V3DownloadResource(dataClient, registrationResource);
-
-        public static async Task<ZipPackage> DownloadPackage(string package, string version)
+        private static string SourceToDirectoryName(string source)
         {
-            var nversion = string.IsNullOrWhiteSpace(version)
-                ? await metadataResource.GetLatestVersion(package, true, false, CancellationToken.None).ConfigureAwait(false)
-                : new NuGetVersion(version);
-
-            var tmpFile = PackageTempFiles.Get(package, nversion);
-            if (tmpFile == null)
+            using (var md5 = MD5.Create())
             {
-                Debug.WriteLine("Downloading {0} {1}", package, nversion);
+                return Convert.ToBase64String(md5.ComputeHash(Encoding.UTF8.GetBytes(source)))
+                    .TrimEnd('=').Replace('/', '-');
+            }
+        }
+
+        public static async Task<PackageFolderReader> GetPackage(string source, string packageId, NuGetVersion version)
+        {
+            if (string.IsNullOrWhiteSpace(source))
+                source = NuGetConstants.V3FeedUrl;
+
+            Resources resources;
+            try
+            {
+                resources = GetResources(source);
+            }
+            catch (Exception ex)
+            {
+                throw new NuGetUtilityException("The source is not a package repository or not working.", ex);
+            }
+
+            if (version == null)
+            {
                 try
                 {
-                    tmpFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
-                    using (var pkgStream = await downloadResource.GetStream(new PackageIdentity(package, nversion), CancellationToken.None).ConfigureAwait(false))
-                    using (var tmpStream = new FileStream(tmpFile, FileMode.Create, FileAccess.Write))
-                    {
-                        await pkgStream.CopyToAsync(tmpStream).ConfigureAwait(false);
-                    }
-                    PackageTempFiles.Add(package, nversion, tmpFile);
+                    version = await resources.Item1.GetLatestVersion(packageId, true, false, CancellationToken.None).ConfigureAwait(false);
                 }
-                catch
+                catch (Exception ex)
                 {
-                    File.Delete(tmpFile);
-                    throw;
+                    throw new NuGetUtilityException("Couldn't find the package.", ex);
                 }
             }
-            return new ZipPackage(tmpFile);
+
+            var identity = new PackageIdentity(packageId, version);
+            var pathResolver = new PackagePathResolver(
+                Path.Combine("App_Data", "repositories", SourceToDirectoryName(source)));
+            var directory = pathResolver.GetInstallPath(identity);
+
+            if (!Directory.Exists(directory))
+            {
+                Debug.WriteLine("Downloading {0} from {1}", identity, source);
+
+                Stream stream;
+                try
+                {
+                    stream = await resources.Item2.GetStream(identity, CancellationToken.None).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    throw new NuGetUtilityException("Couldn't download the package.", ex);
+                }
+                if (stream == null) throw new NuGetUtilityException("Couldn't download the package.");
+
+                try
+                {
+                    using (stream)
+                    using (var buffer = new MemoryStream())
+                    {
+                        await stream.CopyToAsync(buffer).ConfigureAwait(false);
+                        buffer.Position = 0;
+                        await PackageExtractor.ExtractPackageAsync(buffer, identity, pathResolver,
+                            new PackageExtractionContext() { CopySatelliteFiles = true },
+                            PackageSaveModes.Nuspec, CancellationToken.None).ConfigureAwait(false);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    try
+                    {
+                        Directory.Delete(directory, true);
+                    }
+                    catch (DirectoryNotFoundException) { }
+                    throw new NuGetUtilityException("Couldn't extract the package.", ex);
+                }
+            }
+
+            return new PackageFolderReader(directory);
         }
 
-        public static IEnumerable<Compatibility> GetCompatibilities(IPackage package, string targetFrameworkName)
+        public static FrameworkSpecificGroup FindMostCompatibleReferenceGroup(PackageReaderBase package, NuGetFramework target)
         {
-            var target = VersionUtility.ParseFrameworkName(targetFrameworkName);
-            return package.AssemblyReferences
-                .SelectMany(item => item.SupportedFrameworks ?? Enumerable.Empty<FrameworkName>())
-                .Distinct()
-                .Where(f => f != null & VersionUtility.IsCompatible(target, new[] { f }))
-                .Select(f => new Compatibility
-                {
-                    Framework = f,
-                    Score = GetProfileCompatibility(target, f),
-                    PackageDependencies = package.GetCompatiblePackageDependencies(f).ToArray()
-                })
-                .OrderByDescending(c => c.Score);
+            var groups = package.GetReferenceItems(); //中身は List<T> なので二度舐め OK
+            var nearest = new FrameworkReducer().GetNearest(target, groups.Select(x => x.TargetFramework));
+            return nearest != null
+                ? groups.Single(x => x.TargetFramework.Equals(nearest))
+                : null;
         }
+
+        public static PackageDependencyGroup FindMostCompatibleDependencyGroup(PackageReaderBase package, NuGetFramework target)
+        {
+            var groups = package.GetPackageDependencies().ToArray();
+            var nearest = new FrameworkReducer().GetNearest(target, groups.Select(x => x.TargetFramework).Where(x => x != null));
+            return nearest != null
+                ? groups.Single(x => x.TargetFramework.Equals(nearest))
+                : groups.SingleOrDefault(x => x.TargetFramework == null);
+        }
+    }
+
+    public class NuGetUtilityException : Exception
+    {
+        public NuGetUtilityException(string message, Exception innerException = null)
+            : base(message, innerException) { }
     }
 }
