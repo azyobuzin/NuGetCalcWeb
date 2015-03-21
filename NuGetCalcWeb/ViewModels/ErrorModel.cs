@@ -4,9 +4,6 @@ namespace NuGetCalcWeb.ViewModels
 {
     public class ErrorModel
     {
-        [JsonIgnore]
-        public int StatusCode { get; set; }
-
         [JsonProperty("error")]
         public string Header { get; set; }
 

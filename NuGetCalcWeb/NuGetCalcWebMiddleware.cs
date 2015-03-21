@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Owin;
 using NuGet.Frameworks;
+using NuGet.Packaging;
 using NuGet.Versioning;
 using NuGetCalcWeb.ViewModels;
 
@@ -16,30 +19,34 @@ namespace NuGetCalcWeb
         public override async Task Invoke(IOwinContext context)
         {
             var error = new ErrorModel();
+            int statusCode;
             try
             {
                 switch (context.Request.Path.Value)
                 {
                     case "/":
-                        this.Index(context);
+                        Index(context);
                         return;
                     case "/compatibility":
-                        await this.Compatibility(context).ConfigureAwait(false);
+                        await Compatibility(context).ConfigureAwait(false);
+                        return;
+                    case "/upload":
+                        await Upload(context).ConfigureAwait(false);
                         return;
                 }
 
-                error.StatusCode = 404;
+                statusCode = 404;
                 error.Header = "Not Found";
             }
             catch (Exception ex)
             {
                 Trace.TraceError("{0}: {1}", context.Request.Path, ex);
-                error.StatusCode = 500;
+                statusCode = 500;
                 error.Header = "Internal Server Error";
                 error.Detail = ex.ToString();
             }
 
-            context.Response.StatusCode = error.StatusCode;
+            context.Response.StatusCode = statusCode;
 
             var accept = context.Request.Headers.GetCommaSeparatedValues("Accept");
             var isHtmlRequired = accept != null
@@ -50,19 +57,23 @@ namespace NuGetCalcWeb
                 context.Response.Json(error);
         }
 
-        private void Index(IOwinContext context)
+        private static void Index(IOwinContext context)
         {
             //TODO: caching
             context.Response.View("Index", new PackageSelectorModel());
         }
 
-        private async Task Compatibility(IOwinContext context)
+        private static async Task Compatibility(IOwinContext context)
         {
             var q = context.Request.Query;
+            var hash = q["hash"];
             var source = q["source"];
             var packageId = q["packageId"];
             var version = q["version"];
             var targetFramework = q["targetFramework"];
+
+            // NuGetFramework.Parse will throw only ArgumentNullException
+            var nugetFramework = NuGetFramework.Parse(targetFramework);
 
             var model = new CompatibilityModel()
             {
@@ -74,31 +85,45 @@ namespace NuGetCalcWeb
                     DefaultTargetFramework = targetFramework
                 }
             };
-
-            if (string.IsNullOrWhiteSpace(packageId))
-            {
-                model.Error = "Package ID is required.";
-                goto RESPOND;
-            }
-            if (string.IsNullOrWhiteSpace(targetFramework))
-            {
-                model.Error = "Target Framework is required.";
-                goto RESPOND;
-            }
-
-            NuGetVersion nugetVersion = null;
-            if (!string.IsNullOrWhiteSpace(version) && !NuGetVersion.TryParse(version, out nugetVersion))
-            {
-                model.Error = "Version is not valid as NuGetVersion.";
-                goto RESPOND;
-            }
-
-            // NuGetFramework.Parse will throw only ArgumentNullException
-            var nugetFramework = NuGetFramework.Parse(targetFramework);
+            var statusCode = 200;
 
             try
             {
-                using (var package = await NuGetUtility.GetPackage(source, packageId, nugetVersion).ConfigureAwait(false))
+                PackageFolderReader package;
+
+                if (string.IsNullOrEmpty(hash))
+                {
+                    if (string.IsNullOrWhiteSpace(packageId))
+                    {
+                        statusCode = 400;
+                        model.Error = "Package ID is required.";
+                        goto RESPOND;
+                    }
+                    if (string.IsNullOrWhiteSpace(targetFramework))
+                    {
+                        statusCode = 400;
+                        model.Error = "Target Framework is required.";
+                        goto RESPOND;
+                    }
+
+                    NuGetVersion nugetVersion = null;
+                    if (!string.IsNullOrWhiteSpace(version) && !NuGetVersion.TryParse(version, out nugetVersion))
+                    {
+                        statusCode = 400;
+                        model.Error = "Version is not valid as NuGetVersion.";
+                        goto RESPOND;
+                    }
+
+                    package = await NuGetUtility.GetPackage(source, packageId, nugetVersion).ConfigureAwait(false);
+                }
+                else
+                {
+                    package = NuGetUtility.GetUploadedPackage(hash);
+                    model.PackageSelector.UploadHash = hash;
+                    model.PackageSelector.UploadedPackage = package.GetIdentity();
+                }
+
+                using (package)
                 {
                     var identity = package.GetIdentity();
                     model.PackageSelector.DefaultPackageId = identity.Id;
@@ -115,13 +140,94 @@ namespace NuGetCalcWeb
             }
             catch (NuGetUtilityException ex)
             {
+                statusCode = 500;
                 model.Error = ex.Message;
                 if (ex.InnerException != null)
                     model.Exception = ex.InnerException;
             }
 
         RESPOND:
+            context.Response.StatusCode = statusCode;
             context.Response.View("Compatibility", model);
+        }
+
+        private static async Task Upload(IOwinContext context)
+        {
+            var httpContent = new StreamContent(context.Request.Body);
+            foreach (var kvp in context.Request.Headers)
+                httpContent.Headers.TryAddWithoutValidation(kvp.Key, kvp.Value);
+
+            if (!httpContent.IsMimeMultipartContent("form-data"))
+            {
+                context.Response.StatusCode = 415;
+                context.Response.View("Error", new ErrorModel()
+                {
+                    Header = "Unsupported Media Type",
+                    Detail = "You must upload nupkgs with multipart/form-data."
+                });
+                return;
+            }
+
+            var provider = await httpContent
+                .ReadAsMultipartAsync(new MultipartFormDataStreamProvider(Path.GetTempPath()))
+                .ConfigureAwait(false);
+            var formData = provider.FormData;
+
+            var hash = formData["hash"];
+            var method = formData["method"];
+            if (method == null)
+            {
+                context.Response.StatusCode = 400;
+                context.Response.View("Error", new ErrorModel()
+                {
+                    Header = "Bad Request",
+                    Detail = "\"method\" parameter is required."
+                });
+                return;
+            }
+
+            var file = provider.FileData
+                .FirstOrDefault(f => f.Headers.ContentDisposition.Name.Trim('"') == "file");
+
+            if (file != null && new FileInfo(file.LocalFileName).Length > 0)
+            {
+                try
+                {
+                    hash = await NuGetUtility.ExtractUploadedFile(file).ConfigureAwait(false);
+                }
+                catch (NuGetUtilityException ex)
+                {
+                    context.Response.StatusCode = 500;
+                    context.Response.View("Error", new ErrorModel()
+                    {
+                        Header = "Error while extracting the package",
+                        Detail = ex.ToString()
+                    });
+                    return;
+                }
+            }
+            else if (string.IsNullOrEmpty(hash))
+            {
+                context.Response.StatusCode = 400;
+                context.Response.View("Error", new ErrorModel()
+                {
+                    Header = "Bad Request",
+                    Detail = "\"file\" parameter is required."
+                });
+                return;
+            }
+
+            var redirectUri = new UriBuilder(new Uri(context.Request.Uri, method));
+            redirectUri.Query = string.Join("&",
+                Enumerable.Range(0, formData.Count)
+                    .Select(i => Tuple.Create(formData.GetKey(i), formData.Get(i)))
+                    .Where(t => t.Item1 != "method" && t.Item1 != "hash" && !string.IsNullOrEmpty(t.Item2))
+                    .Concat(new[] { Tuple.Create("hash", hash) })
+                    .Select(t => string.Format("{0}={1}", Uri.EscapeDataString(t.Item1), Uri.EscapeDataString(t.Item2)))
+            );
+
+            context.Response.StatusCode = 303;
+            context.Response.Headers.Set("Location", redirectUri.ToString());
         }
     }
 }

@@ -1,22 +1,51 @@
 ﻿@using NuGetCalcWeb.ViewModels
 @inherits AppTemplateBase<PackageSelectorModel>
-<form id="form-browse" action="~/browse" method="get">
-    <div class="form-group">
-        <label for="package-source">Source</label>
-        <input id="package-source" name="source" type="url" class="form-control" value="@Model.DefaultSource" placeholder="https://api.nuget.org/v3/index.json" />
-    </div>
-    <div class="form-group">
-        <label for="package-id">Package ID</label>
-        <input id="package-id" name="packageId" type="text" class="form-control" value="@Model.DefaultPackageId" required />
-    </div>
-    <div class="form-group">
-        <label for="package-version">Version</label>
-        <input id="package-version" name="version" type="text" class="form-control" value="@Model.DefaultVersion" placeholder="the latest version" />
-    </div>
-    <div class="form-group">
-        <button type="submit" class="btn btn-primary">Browse files in the package</button>
-    </div>
-</form>
+<ul class="nav nav-tabs" role="tablist">
+    <li id="tab-repository"><a href="#form-browse" role="tab" data-toggle="tab">Repository</a></li>
+    <li id="tab-upload"><a href="#form-upload-browse" role="tab" data-toggle="tab">Upload</a></li>
+</ul>
+<div id="browse-container" class="tab-content">
+    <form id="form-browse" action="~/browse" method="get" class="tab-pane" role="tabpanel">
+        <div class="form-group">
+            <label for="package-source">Source</label>
+            <input id="package-source" name="source" type="url" class="form-control" value="@Model.DefaultSource" placeholder="https://api.nuget.org/v3/index.json" />
+        </div>
+        <div class="form-group">
+            <label for="package-id">Package ID</label>
+            <input id="package-id" name="packageId" type="text" class="form-control" value="@Model.DefaultPackageId" required />
+        </div>
+        <div class="form-group">
+            <label for="package-version">Version</label>
+            <input id="package-version" name="version" type="text" class="form-control" value="@Model.DefaultVersion" placeholder="the latest version" />
+        </div>
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary">Browse files in the package</button>
+        </div>
+    </form>
+    <form id="form-upload-browse" action="~/upload" method="post" enctype="multipart/form-data" class="tab-pane" role="tabpanel">
+        <input type="hidden" id="upload-method" name="method" value="browse" />
+        <input type="hidden" id="upload-target-framework" name="targetFramework" />
+        @if (!string.IsNullOrEmpty(@Model.UploadHash))
+        {
+            <input type="hidden" name="hash" value="@Model.UploadHash" />
+            <div class="form-group">
+                <label>Uploaded Package</label>
+                <div>@Model.UploadedPackage.Id @Model.UploadedPackage.Version</div>
+            </div>
+        }
+        <div class="form-group">
+            <label for="upload-file">Nupkg File</label>
+            <input id="upload-file" name="file" type="file" class="form-control" required />
+        </div>
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary">Browse files in the package</button>
+        </div>
+    </form>
+</div>
+<script>
+    $("@(string.IsNullOrEmpty(Model.UploadHash) ? "#tab-repository, #form-browse" : "#tab-upload, #form-upload-browse")")
+        .addClass("active");
+</script>
 <form id="form-compatilibity" action="~/compatibility" method="get">
     <input type="hidden" id="compatibility-source" name="source" />
     <input type="hidden" id="compatibility-id" name="packageId" />

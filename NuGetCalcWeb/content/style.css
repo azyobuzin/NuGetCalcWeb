@@ -9,3 +9,11 @@
 .tt-dropdown-menu {
     width: 100%;
 }
+
+#browse-container {
+    margin-top: 15px;
+}
+
+#compatibility-pkgselector {
+    padding-top: 20px;
+}

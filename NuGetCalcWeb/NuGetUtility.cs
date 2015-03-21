@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -36,13 +37,15 @@ namespace NuGetCalcWeb
             return result;
         }
 
+        private static string Base64(this byte[] inArray)
+        {
+            return Convert.ToBase64String(inArray).TrimEnd('=').Replace('/', '-');
+        }
+
         private static string SourceToDirectoryName(string source)
         {
             using (var md5 = MD5.Create())
-            {
-                return Convert.ToBase64String(md5.ComputeHash(Encoding.UTF8.GetBytes(source)))
-                    .TrimEnd('=').Replace('/', '-');
-            }
+                return md5.ComputeHash(Encoding.UTF8.GetBytes(source)).Base64();
         }
 
         public static async Task<PackageFolderReader> GetPackage(string source, string packageId, NuGetVersion version)
@@ -82,14 +85,26 @@ namespace NuGetCalcWeb
 
                 try
                 {
-                    using (stream)
-                    using (var buffer = new MemoryStream())
+                    var tempFile = Path.GetTempFileName();
+                    try
                     {
-                        await stream.CopyToAsync(buffer).ConfigureAwait(false);
-                        buffer.Position = 0;
-                        await PackageExtractor.ExtractPackageAsync(buffer, identity, pathResolver,
-                            new PackageExtractionContext() { CopySatelliteFiles = true },
-                            PackageSaveModes.Nuspec, CancellationToken.None).ConfigureAwait(false);
+                        using (var buffer = new FileStream(tempFile, FileMode.Create, FileAccess.ReadWrite))
+                        {
+                            await stream.CopyToAsync(buffer).ConfigureAwait(false);
+                            buffer.Position = 0;
+                            await PackageExtractor.ExtractPackageAsync(buffer, identity, pathResolver,
+                                new PackageExtractionContext() { CopySatelliteFiles = true },
+                                PackageSaveModes.Nuspec, CancellationToken.None).ConfigureAwait(false);
+                        }
+                    }
+                    finally
+                    {
+                        stream.Close();
+                        try
+                        {
+                            File.Delete(tempFile);
+                        }
+                        catch { }
                     }
                 }
                 catch (Exception ex)
@@ -122,6 +137,70 @@ namespace NuGetCalcWeb
             return nearest != null
                 ? groups.Single(x => x.TargetFramework.Equals(nearest))
                 : groups.SingleOrDefault(x => x.TargetFramework == null);
+        }
+
+        public static async Task<string> ExtractUploadedFile(MultipartFileData file)
+        {
+            var fileInfo = new FileInfo(file.LocalFileName);
+            if (fileInfo.Length > 20 * 1024 * 1024)
+                throw new NuGetUtilityException("Too large file. The package file must be smaller than 20 MiB");
+
+            string result;
+            using (var md5 = MD5.Create())
+            using (var stream = fileInfo.OpenRead())
+            {
+                var hashBytes = md5.ComputeHash(stream);
+                var lengthBytes = BitConverter.GetBytes((int)fileInfo.Length);
+                var bytes = new byte[hashBytes.Length + lengthBytes.Length];
+                Array.Copy(hashBytes, bytes, hashBytes.Length);
+                Array.Copy(lengthBytes, 0, bytes, hashBytes.Length, lengthBytes.Length);
+                result = bytes.Base64();
+            }
+
+            var directory = Path.Combine("App_Data", "upload", result);
+            if (!Directory.Exists(directory))
+            {
+                var pathResolver = new PackagePathResolver(directory);
+                PackageIdentity identity;
+
+                try
+                {
+                    using (var stream = fileInfo.OpenRead())
+                    {
+                        using (var package = new PackageReader(stream, true))
+                            identity = package.GetIdentity();
+
+                        stream.Position = 0;
+
+                        await PackageExtractor.ExtractPackageAsync(stream, identity, pathResolver,
+                            new PackageExtractionContext() { CopySatelliteFiles = true },
+                            PackageSaveModes.Nuspec, CancellationToken.None).ConfigureAwait(false);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    try
+                    {
+                        Directory.Delete(directory, true);
+                    }
+                    catch (DirectoryNotFoundException) { }
+                    throw new NuGetUtilityException("Couldn't extract the package.", ex);
+                }
+
+                fileInfo.MoveTo(Path.Combine(directory, pathResolver.GetPackageFileName(identity)));
+            }
+
+            return result;
+        }
+
+        public static PackageFolderReader GetUploadedPackage(string hash)
+        {
+            var dir = new DirectoryInfo(Path.Combine("App_Data", "upload", hash))
+                .EnumerateDirectories()
+                .SingleOrDefault(x => !x.Attributes.HasFlag(FileAttributes.Hidden) && !x.Name.StartsWith("."));
+            if (dir == null)
+                throw new NuGetUtilityException("The package has not been uploaded.");
+            return new PackageFolderReader(dir);
         }
     }
 
