@@ -32,7 +32,10 @@ namespace NuGetCalcWeb
             });
 
             if (result.Item1 == null || result.Item2 == null)
+            {
+                resourceCache.TryRemove(source, out result);
                 throw new NuGetUtilityException("The source is not a package repository or not working.");
+            }
 
             return result;
         }
@@ -143,7 +146,7 @@ namespace NuGetCalcWeb
         {
             var fileInfo = new FileInfo(file.LocalFileName);
             if (fileInfo.Length > 20 * 1024 * 1024)
-                throw new NuGetUtilityException("Too large file. The package file must be smaller than 20 MiB");
+                throw new NuGetUtilityException("Too large file. The package file must be smaller than 20 MiB.");
 
             string result;
             using (var md5 = MD5.Create())
