@@ -24,11 +24,16 @@ namespace NuGetCalcWeb
 
         private static Resources GetResources(string source)
         {
-            return resourceCache.GetOrAdd(source, key =>
+            var result = resourceCache.GetOrAdd(source, key =>
             {
                 var repo = RepositoryFactory.Create(key);
                 return Tuple.Create(repo.GetResource<MetadataResource>(), repo.GetResource<DownloadResource>());
             });
+
+            if (result.Item1 == null || result.Item2 == null)
+                throw new NuGetUtilityException("The source is not a package repository or not working.");
+
+            return result;
         }
 
         private static string SourceToDirectoryName(string source)
@@ -45,26 +50,14 @@ namespace NuGetCalcWeb
             if (string.IsNullOrWhiteSpace(source))
                 source = NuGetConstants.V3FeedUrl;
 
-            Resources resources;
-            try
-            {
-                resources = GetResources(source);
-            }
-            catch (Exception ex)
-            {
-                throw new NuGetUtilityException("The source is not a package repository or not working.", ex);
-            }
+            var resources = GetResources(source);
 
             if (version == null)
             {
-                try
-                {
-                    version = await resources.Item1.GetLatestVersion(packageId, true, false, CancellationToken.None).ConfigureAwait(false);
-                }
-                catch (Exception ex)
-                {
-                    throw new NuGetUtilityException("Couldn't find the package.", ex);
-                }
+                version = await resources.Item1.GetLatestVersion(packageId, true, false, CancellationToken.None).ConfigureAwait(false);
+
+                if (version == null)
+                    throw new NuGetUtilityException("Couldn't find the package.");
             }
 
             var identity = new PackageIdentity(packageId, version);
