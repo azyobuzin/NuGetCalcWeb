@@ -157,3 +157,4 @@ $RECYCLE.BIN/
 
 # NuGetCalcWeb user files
 /NuGetCalcWeb/App_Data
+node_modules
