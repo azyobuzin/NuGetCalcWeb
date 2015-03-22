@@ -35,6 +35,9 @@ namespace NuGetCalcWeb
                         return;
                 }
 
+                await this.Next.Invoke(context).ConfigureAwait(false);
+                if (!context.Get<bool>("NuGetCalcWeb#noStaticFile")) return;
+
                 statusCode = 404;
                 error.Header = "Not Found";
             }

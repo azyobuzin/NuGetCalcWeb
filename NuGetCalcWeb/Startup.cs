@@ -11,13 +11,17 @@ namespace NuGetCalcWeb
     {
         public void Configuration(IAppBuilder app)
         {
-            app.UseStaticFiles(new StaticFileOptions()
-            {
-                RequestPath = new PathString("/content"),
-                FileSystem = new PhysicalFileSystem("content")
-            });
-
-            app.Use<NuGetCalcWebMiddleware>();
+            app.Use<NuGetCalcWebMiddleware>()
+                .UseStaticFiles(new StaticFileOptions()
+                {
+                    RequestPath = new PathString("/content"),
+                    FileSystem = new PhysicalFileSystem("content")
+                })
+                .Use((ctx, next) =>
+                {
+                    ctx.Set("NuGetCalcWeb#noStaticFile", true);
+                    return next();
+                });
         }
     }
 }
