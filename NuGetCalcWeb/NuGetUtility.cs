@@ -51,7 +51,7 @@ namespace NuGetCalcWeb
                 return md5.ComputeHash(Encoding.UTF8.GetBytes(source)).Base64();
         }
 
-        public static async Task<PackageFolderReader> GetPackage(string source, string packageId, NuGetVersion version)
+        public static async Task<DirectoryInfo> GetPackage(string source, string packageId, NuGetVersion version)
         {
             if (string.IsNullOrWhiteSpace(source))
                 source = NuGetConstants.V3FeedUrl;
@@ -69,9 +69,9 @@ namespace NuGetCalcWeb
             var identity = new PackageIdentity(packageId, version);
             var pathResolver = new PackagePathResolver(
                 Path.Combine("App_Data", "repositories", SourceToDirectoryName(source)));
-            var directory = pathResolver.GetInstallPath(identity);
+            var directory = new DirectoryInfo(pathResolver.GetInstallPath(identity));
 
-            if (!Directory.Exists(directory))
+            if (!directory.Exists)
             {
                 Debug.WriteLine("Downloading {0} from {1}", identity, source);
 
@@ -114,14 +114,14 @@ namespace NuGetCalcWeb
                 {
                     try
                     {
-                        Directory.Delete(directory, true);
+                        directory.Delete(true);
                     }
                     catch (DirectoryNotFoundException) { }
                     throw new NuGetUtilityException("Couldn't extract the package.", ex);
                 }
             }
 
-            return new PackageFolderReader(directory);
+            return directory;
         }
 
         public static FrameworkSpecificGroup FindMostCompatibleReferenceGroup(PackageReaderBase package, NuGetFramework target)
@@ -196,14 +196,14 @@ namespace NuGetCalcWeb
             return result;
         }
 
-        public static PackageFolderReader GetUploadedPackage(string hash)
+        public static DirectoryInfo GetUploadedPackage(string hash)
         {
             var dir = new DirectoryInfo(Path.Combine("App_Data", "upload", hash))
                 .EnumerateDirectories()
                 .SingleOrDefault(x => !x.Attributes.HasFlag(FileAttributes.Hidden) && !x.Name.StartsWith("."));
             if (dir == null)
                 throw new NuGetUtilityException("The package has not been uploaded.");
-            return new PackageFolderReader(dir);
+            return dir;
         }
     }
 

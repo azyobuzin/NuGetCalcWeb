@@ -10,5 +10,13 @@ namespace NuGetCalcWeb.ViewModels
         public string DefaultTargetFramework { get; set; }
         public string UploadHash { get; set; }
         public PackageIdentity UploadedPackage { get; set; }
+
+        public bool IsUploaded
+        {
+            get
+            {
+                return this.UploadHash != null && this.UploadedPackage != null;
+            }
+        }
     }
 }

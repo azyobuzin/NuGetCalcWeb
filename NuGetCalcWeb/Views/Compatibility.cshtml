@@ -1,11 +1,10 @@
-﻿@using System.Linq
-@using NuGetCalcWeb.ViewModels
+﻿@using NuGetCalcWeb.ViewModels
 @inherits AppTemplateBase<CompatibilityModel>
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8" />
-    <title>NuGetCalc</title>
+    <title>Compatibility Result - NuGetCalc</title>
     <meta name="robots" content="noindex" />
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" />
@@ -28,7 +27,7 @@
                 {
                     <h2>Result</h2>
                     <h3>Reference Assemblies</h3>
-                    if (Model.ReferenceAssemblies != null && Model.ReferenceAssemblies.Any())
+                    if (!Model.ReferenceAssemblies.IsNullOrEmpty())
                     {
                         <ul>
                             @foreach (var file in Model.ReferenceAssemblies)
@@ -43,12 +42,12 @@
                     }
                     
                     <h3>Dependencies</h3>
-                    if (Model.Dependencies != null && Model.Dependencies.Any())
+                    if (!Model.Dependencies.IsNullOrEmpty())
                     {
                         <ul>
                             @foreach (var dependency in Model.Dependencies)
                             {
-                                <li>@dependency.Id @dependency.VersionRange</li>
+                                <li>@dependency</li>
                             }
                         </ul>
                     }

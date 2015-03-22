@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Owin;
 using NuGet.Frameworks;
@@ -22,7 +23,8 @@ namespace NuGetCalcWeb
             int statusCode;
             try
             {
-                switch (context.Request.Path.Value)
+                var path = context.Request.Path.Value;
+                switch (path)
                 {
                     case "/":
                         Index(context);
@@ -33,6 +35,25 @@ namespace NuGetCalcWeb
                     case "/upload":
                         await Upload(context).ConfigureAwait(false);
                         return;
+                    case "/browse":
+                        await Browse(context).ConfigureAwait(false);
+                        return;
+                }
+
+                var m = Regex.Match(path, @"^/browse/repositories/([a-zA-Z0-9\+\-]+)/([^/]+)/(.*)$");
+                if (m.Success)
+                {
+                    await BrowseRepositories(context,
+                        m.Groups[1].Value, m.Groups[2].Value, m.Groups[3].Value).ConfigureAwait(false);
+                    return;
+                }
+
+                m = Regex.Match(path, @"^/browse/upload/([a-zA-Z0-9\+\-]+)/(.*)$");
+                if (m.Success)
+                {
+                    await BrowseUpload(context,
+                        m.Groups[1].Value, m.Groups[2].Value).ConfigureAwait(false);
+                    return;
                 }
 
                 await this.Next.Invoke(context).ConfigureAwait(false);
@@ -117,11 +138,12 @@ namespace NuGetCalcWeb
                         goto RESPOND;
                     }
 
-                    package = await NuGetUtility.GetPackage(source, packageId, nugetVersion).ConfigureAwait(false);
+                    package = new PackageFolderReader(
+                        await NuGetUtility.GetPackage(source, packageId, nugetVersion).ConfigureAwait(false));
                 }
                 else
                 {
-                    package = NuGetUtility.GetUploadedPackage(hash);
+                    package = new PackageFolderReader(NuGetUtility.GetUploadedPackage(hash));
                     model.PackageSelector.UploadHash = hash;
                     model.PackageSelector.UploadedPackage = package.GetIdentity();
                 }
@@ -231,6 +253,121 @@ namespace NuGetCalcWeb
 
             context.Response.StatusCode = 303;
             context.Response.Headers.Set("Location", redirectUri.ToString());
+        }
+
+        private static async Task Browse(IOwinContext context)
+        {
+            string redirectTo;
+
+            var q = context.Request.Query;
+            var hash = q["hash"];
+
+            if (string.IsNullOrEmpty(hash))
+            {
+                string error = null;
+                var source = q["source"];
+                var packageId = q["packageId"];
+                var version = q["version"];
+                NuGetVersion nugetVersion = null;
+
+                if (string.IsNullOrWhiteSpace(packageId))
+                    error = "Package ID is required";
+                else if (!string.IsNullOrWhiteSpace(version) && !NuGetVersion.TryParse(version, out nugetVersion))
+                    error = "Version is not valid as NuGetVersion";
+
+                if (error != null)
+                {
+                    context.Response.StatusCode = 400;
+                    context.Response.View("Error", new ErrorModel() { Header = error });
+                    return;
+                }
+
+                try
+                {
+                    var packageDir = await NuGetUtility.GetPackage(source, packageId, nugetVersion).ConfigureAwait(false);
+                    var s = packageDir.FullName.Split(Path.DirectorySeparatorChar);
+                    redirectTo = string.Format("repositories/{0}/{1}/",
+                        s[s.Length - 2], // repository hash
+                        s[s.Length - 1] // package name and version
+                    );
+                }
+                catch (NuGetUtilityException ex)
+                {
+                    context.Response.StatusCode = 500;
+                    context.Response.View("Error", new ErrorModel()
+                    {
+                        Header = "Error while downloading the package",
+                        Detail = ex.ToString()
+                    });
+                    return;
+                }
+            }
+            else
+            {
+                redirectTo = string.Format("upload/{0}/", hash);
+            }
+
+            context.Response.StatusCode = 303;
+            context.Response.Headers.Set("Location", string.Format("{0}/{1}",
+                context.Request.Uri.GetLeftPart(UriPartial.Path),
+                redirectTo
+            ));
+        }
+
+        private static Task BrowseRepositories(IOwinContext context, string hash, string packageName, string path)
+        {
+            return BrowseImpl(context,
+                new DirectoryInfo(Path.Combine("App_Data", "repositories", hash, packageName)), path);
+        }
+
+        private static Task BrowseUpload(IOwinContext context, string hash, string path)
+        {
+            return BrowseImpl(context, NuGetUtility.GetUploadedPackage(hash), path);
+        }
+
+        private static async Task BrowseImpl(IOwinContext context, DirectoryInfo root, string path)
+        {
+            var s = path.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+            if (s.Any(x => x.Length > 0 && x.All(c => c == '.')))
+            {
+                context.Response.StatusCode = 404;
+                context.Response.View("Error", new ErrorModel() { Header = "Illegal Path" });
+                return;
+            }
+
+            if (path == "" || path.EndsWith("/"))
+            {
+                DirectoryInfo dir;
+                if (s.Length > 0)
+                {
+                    var args = new string[s.Length + 1];
+                    args[0] = root.FullName;
+                    Array.Copy(s, 0, args, 1, s.Length);
+                    dir = new DirectoryInfo(Path.Combine(args));
+                }
+                else
+                    dir = root;
+
+                if (!dir.Exists)
+                {
+                    context.Response.StatusCode = 404;
+                    context.Response.View("Error", new ErrorModel() { Header = "Not Found" });
+                    return;
+                }
+
+                var package = new PackageFolderReader(root);
+                context.Response.View("FileList", new FileListModel()
+                {
+                    Identity = package.GetIdentity(),
+                    Breadcrumbs = s,
+                    Directories = dir.EnumerateDirectories().Where(d => !d.Attributes.HasFlag(FileAttributes.Hidden)),
+                    Files = dir.EnumerateFiles().Where(f => !f.Attributes.HasFlag(FileAttributes.Hidden))
+                });
+            }
+            else
+            {
+                throw new NotImplementedException("TODO: Implement file viewer");
+            }
         }
     }
 }

@@ -25,17 +25,17 @@
     <form id="form-upload-browse" action="~/upload" method="post" enctype="multipart/form-data" class="tab-pane" role="tabpanel">
         <input type="hidden" id="upload-method" name="method" value="browse" />
         <input type="hidden" id="upload-target-framework" name="targetFramework" />
-        @if (!string.IsNullOrEmpty(@Model.UploadHash))
+        @if (@Model.IsUploaded)
         {
             <input type="hidden" name="hash" value="@Model.UploadHash" />
             <div class="form-group">
                 <label>Uploaded Package</label>
-                <div>@Model.UploadedPackage.Id @Model.UploadedPackage.Version</div>
+                <div>@Model.UploadedPackage</div>
             </div>
         }
         <div class="form-group">
             <label for="upload-file">Nupkg File</label>
-            <input id="upload-file" name="file" type="file" class="form-control" required />
+            <input id="upload-file" name="file" type="file" class="form-control" @(Model.IsUploaded ? "" : "required") />
         </div>
         <div class="form-group">
             <button type="submit" class="btn btn-primary">Browse files in the package</button>
@@ -43,7 +43,7 @@
     </form>
 </div>
 <script>
-    $("@(string.IsNullOrEmpty(Model.UploadHash) ? "#tab-repository, #form-browse" : "#tab-upload, #form-upload-browse")")
+    $("@(Model.IsUploaded ? "#tab-upload, #form-upload-browse" : "#tab-repository, #form-browse")")
         .addClass("active");
 </script>
 <form id="form-compatilibity" action="~/compatibility" method="get">

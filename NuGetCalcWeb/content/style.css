@@ -17,3 +17,11 @@
 #compatibility-pkgselector {
     padding-top: 20px;
 }
+
+.file-icon {
+    width: 20px;
+}
+
+.file-size {
+    width: 7em;
+}
