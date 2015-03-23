@@ -335,39 +335,58 @@ namespace NuGetCalcWeb
                 return;
             }
 
-            if (path == "" || path.EndsWith("/"))
+            using (var package = new PackageFolderReader(root))
             {
-                DirectoryInfo dir;
-                if (s.Length > 0)
+                if (path == "" || path.EndsWith("/"))
                 {
-                    var args = new string[s.Length + 1];
-                    args[0] = root.FullName;
-                    Array.Copy(s, 0, args, 1, s.Length);
-                    dir = new DirectoryInfo(Path.Combine(args));
+                    var dir = new DirectoryInfo(Path.Combine(root.FullName, Path.Combine(s)));
+                    if (!dir.Exists)
+                        goto NOT_FOUND;
+
+                    context.Response.View("FileList", new FileListModel()
+                    {
+                        Identity = package.GetIdentity(),
+                        Breadcrumbs = s,
+                        Directories = dir.EnumerateDirectories().Where(d => !d.Attributes.HasFlag(FileAttributes.Hidden)),
+                        Files = dir.EnumerateFiles().Where(f => !f.Attributes.HasFlag(FileAttributes.Hidden))
+                    });
                 }
                 else
-                    dir = root;
-
-                if (!dir.Exists)
                 {
-                    context.Response.StatusCode = 404;
-                    context.Response.View("Error", new ErrorModel() { Header = "Not Found" });
-                    return;
+                    var file = new FileInfo(Path.Combine(root.FullName, Path.Combine(s)));
+                    if (!file.Exists)
+                        goto NOT_FOUND;
+
+                    var splitedFileName = file.FullName.Split(Path.DirectorySeparatorChar);
+                    var htmlFile = new FileInfo(Path.Combine("App_Data", "html", Path.Combine(
+                        splitedFileName.Skip(Array.LastIndexOf(splitedFileName, "App_Data")).ToArray())));
+
+                    string content;
+                    if (htmlFile.Exists)
+                    {
+                        content = File.ReadAllText(htmlFile.FullName);
+                    }
+                    else
+                    {
+                        content = await FilePreviewGenerator.GenerateHtml(file).ConfigureAwait(false);
+                        Directory.CreateDirectory(htmlFile.DirectoryName);
+                        File.WriteAllText(htmlFile.FullName, content);
+                    }
+
+                    context.Response.View("FilePreview", new FilePreviewModel()
+                    {
+                        Identity = package.GetIdentity(),
+                        Breadcrumbs = s,
+                        Content = content
+                    });
                 }
+            }
 
-                var package = new PackageFolderReader(root);
-                context.Response.View("FileList", new FileListModel()
-                {
-                    Identity = package.GetIdentity(),
-                    Breadcrumbs = s,
-                    Directories = dir.EnumerateDirectories().Where(d => !d.Attributes.HasFlag(FileAttributes.Hidden)),
-                    Files = dir.EnumerateFiles().Where(f => !f.Attributes.HasFlag(FileAttributes.Hidden))
-                });
-            }
-            else
-            {
-                throw new NotImplementedException("TODO: Implement file viewer");
-            }
+            return;
+
+        NOT_FOUND:
+            context.Response.StatusCode = 404;
+            context.Response.View("Error", new ErrorModel() { Header = "Not Found" });
         }
     }
 }

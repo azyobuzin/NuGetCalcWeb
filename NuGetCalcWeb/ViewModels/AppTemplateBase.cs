@@ -36,6 +36,9 @@ namespace NuGetCalcWeb.ViewModels
 
         public static string Times(this string s, int count)
         {
+            if (count == 0) return "";
+            if (count < 0) throw new ArgumentOutOfRangeException();
+
             var sb = new StringBuilder(s.Length * count);
             for (var i = 0; i < count; i++)
                 sb.Append(s);

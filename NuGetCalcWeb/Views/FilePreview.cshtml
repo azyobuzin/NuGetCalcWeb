@@ -1,0 +1,36 @@
+﻿@using NuGetCalcWeb.ViewModels
+@inherits AppTemplateBase<FilePreviewModel>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>@Model.Breadcrumbs[Model.Breadcrumbs.Length - 1]</title>
+    <meta name="robots" content="noindex" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/vs.min.css">
+    <link rel="stylesheet" href="~/content/style.css" />
+    @ExternalSnippets.Default.Analytics
+    <script src="http://code.jquery.com/jquery-2.1.3.min.js"></script>
+</head>
+<body>
+    @Include("_Header")
+
+    <div class="container">
+        <ol class="breadcrumb">
+            <li><a href="@(Model.Breadcrumbs.Length == 1 ? "./" : "../".Times(Model.Breadcrumbs.Length - 1))">@Model.Identity</a></li>
+            @for (int i = 0, j = Model.Breadcrumbs.Length - 2; i < Model.Breadcrumbs.Length - 1; i++, j--)
+            {
+                <li>
+                    <a href="@(j == 0 ? "./" : "../".Times(j))">@Model.Breadcrumbs[i]</a>
+                </li>
+            }
+            <li>@Model.Breadcrumbs[Model.Breadcrumbs.Length - 1]</li>
+        </ol>
+
+        @ExternalSnippets.Default.AdTop
+
+        @Raw(Model.Content)
+    </div>
+</body>
+</html>

@@ -156,6 +156,7 @@
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Web.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Microsoft.AspNet.Razor.3.2.3\lib\net45\System.Web.Razor.dll</HintPath>
@@ -183,6 +184,7 @@
     <Content Include="Views\_Header.cshtml" />
     <Content Include="Views\Compatibility.cshtml" />
     <Content Include="Views\FileList.cshtml" />
+    <Content Include="Views\FilePreview.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -205,11 +207,13 @@
     <Compile Include="RazorSupport\AppTemplateManager.cs" />
     <Compile Include="Startup.cs" />
     <Compile Include="ResponseHelper.cs" />
+    <Compile Include="FilePreviewGenerator.cs" />
     <Compile Include="ViewModels\CompatibilityModel.cs" />
     <Compile Include="ViewModels\ErrorModel.cs" />
     <Compile Include="ViewModels\ExternalSnippets.cs" />
     <Compile Include="ViewModels\AppTemplateBase.cs" />
     <Compile Include="ViewModels\FileListModel.cs" />
+    <Compile Include="ViewModels\FilePreviewModel.cs" />
     <Compile Include="ViewModels\PackageSelectorModel.cs" />
   </ItemGroup>
   <PropertyGroup>
