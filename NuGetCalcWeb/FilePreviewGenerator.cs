@@ -76,7 +76,7 @@ namespace NuGetCalcWeb
 
             if (text != null)
             {
-                await writer.WriteAsync("<pre><code>").ConfigureAwait(false);
+                await writer.WriteAsync(@"<link rel=""stylesheet"" href=""https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/vs.min.css""><pre><code>").ConfigureAwait(false);
                 await writer.WriteAsync(await Highlight(text).ConfigureAwait(false)).ConfigureAwait(false);
                 await writer.WriteLineAsync("</code></pre>").ConfigureAwait(false);
             }
