@@ -51,6 +51,8 @@ namespace NuGetCalcWeb
                 return md5.ComputeHash(Encoding.UTF8.GetBytes(source)).Base64();
         }
 
+        private static ConcurrentDictionary<Tuple<string, PackageIdentity>, Task> getPackageTasks = new ConcurrentDictionary<Tuple<string, PackageIdentity>, Task>();
+
         public static async Task<DirectoryInfo> GetPackage(string source, string packageId, NuGetVersion version)
         {
             if (string.IsNullOrWhiteSpace(source))
@@ -73,52 +75,61 @@ namespace NuGetCalcWeb
 
             if (!directory.Exists)
             {
-                Debug.WriteLine("Downloading {0} from {1}", identity, source);
+                var key = Tuple.Create(source, identity);
+                await getPackageTasks.GetOrAdd(key, _ => Task.Run(async () =>
+                {
+                    Debug.WriteLine("Downloading {0} from {1}", identity, source);
 
-                Stream stream;
-                try
-                {
-                    stream = await resources.Item2.GetStream(identity, CancellationToken.None).ConfigureAwait(false);
-                }
-                catch (Exception ex)
-                {
-                    throw new NuGetUtilityException("Couldn't download the package.", ex);
-                }
-                if (stream == null) throw new NuGetUtilityException("Couldn't download the package.");
-
-                try
-                {
-                    var tempFile = Path.GetTempFileName();
+                    Stream stream;
                     try
                     {
-                        using (var buffer = new FileStream(tempFile, FileMode.Create, FileAccess.ReadWrite))
-                        {
-                            await stream.CopyToAsync(buffer).ConfigureAwait(false);
-                            buffer.Position = 0;
-                            await PackageExtractor.ExtractPackageAsync(buffer, identity, pathResolver,
-                                new PackageExtractionContext() { CopySatelliteFiles = true },
-                                PackageSaveModes.Nuspec, CancellationToken.None).ConfigureAwait(false);
-                        }
+                        stream = await resources.Item2.GetStream(identity, CancellationToken.None).ConfigureAwait(false);
                     }
-                    finally
+                    catch (Exception ex)
                     {
-                        stream.Close();
+                        throw new NuGetUtilityException("Couldn't download the package.", ex);
+                    }
+                    if (stream == null) throw new NuGetUtilityException("Couldn't download the package.");
+
+                    try
+                    {
+                        var tempFile = Path.GetTempFileName();
                         try
                         {
-                            File.Delete(tempFile);
+                            using (var buffer = new FileStream(tempFile, FileMode.Create, FileAccess.ReadWrite))
+                            {
+                                await stream.CopyToAsync(buffer).ConfigureAwait(false);
+                                buffer.Position = 0;
+                                await PackageExtractor.ExtractPackageAsync(buffer, identity, pathResolver,
+                                    new PackageExtractionContext() { CopySatelliteFiles = true },
+                                    PackageSaveModes.Nuspec, CancellationToken.None).ConfigureAwait(false);
+                            }
                         }
-                        catch { }
+                        finally
+                        {
+                            stream.Close();
+                            try
+                            {
+                                File.Delete(tempFile);
+                            }
+                            catch { }
+                        }
                     }
-                }
-                catch (Exception ex)
-                {
-                    try
+                    catch (Exception ex)
                     {
-                        directory.Delete(true);
+                        try
+                        {
+                            directory.Delete(true);
+                        }
+                        catch (DirectoryNotFoundException) { }
+                        throw new NuGetUtilityException("Couldn't extract the package.", ex);
                     }
-                    catch (DirectoryNotFoundException) { }
-                    throw new NuGetUtilityException("Couldn't extract the package.", ex);
-                }
+
+                    return directory;
+                })).ConfigureAwait(false);
+
+                Task tmp;
+                getPackageTasks.TryRemove(key, out tmp);
             }
 
             return directory;

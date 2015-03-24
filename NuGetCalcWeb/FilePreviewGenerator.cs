@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
@@ -10,22 +12,54 @@ namespace NuGetCalcWeb
 {
     public static class FilePreviewGenerator
     {
-        public static Task<string> GenerateHtml(FileInfo input)
+        private static ConcurrentDictionary<string, Task<string>> tasks = new ConcurrentDictionary<string, Task<string>>(StringComparer.OrdinalIgnoreCase);
+
+        public static async Task<string> GenerateHtml(FileInfo input)
         {
-            var ext = input.Extension;
-            return ext == ".dll" || ext == ".exe"
-                ? GenerateFromAssemblyFile(input)
-                : GenerateFromFile(input);
+            var fullName = input.FullName;
+            var splitedFileName = fullName.Split(Path.DirectorySeparatorChar);
+            var htmlFile = new FileInfo(Path.Combine("App_Data", "html", Path.Combine(
+                splitedFileName.Skip(Array.LastIndexOf(splitedFileName, "App_Data") + 1).ToArray())));
+            if (htmlFile.Exists)
+            {
+                using (var sr = new StreamReader(htmlFile.FullName))
+                    return await sr.ReadToEndAsync().ConfigureAwait(false);
+            }
+
+            var result = await tasks.GetOrAdd(fullName, _ => Task.Run(async () =>
+            {
+                Debug.WriteLine("Generating " + input.Name);
+                Directory.CreateDirectory(htmlFile.DirectoryName);
+                using (var stream = new FileStream(htmlFile.FullName, FileMode.Create, FileAccess.ReadWrite))
+                {
+                    using (var sw = new StreamWriter(stream, Encoding.UTF8, 1024, true))
+                    {
+                        var ext = input.Extension;
+                        await (ext == ".dll" || ext == ".exe"
+                            ? GenerateFromAssemblyFile(input, sw)
+                            : GenerateFromFile(input, sw)
+                        ).ConfigureAwait(false);
+                    }
+
+                    stream.Position = 0;
+                    using (var sr = new StreamReader(stream))
+                        return await sr.ReadToEndAsync().ConfigureAwait(false);
+                }
+            })).ConfigureAwait(false);
+
+            Task<string> tmp;
+            tasks.TryRemove(fullName, out tmp);
+            return result;
         }
 
-        private static Task<string> GenerateFromAssemblyFile(FileInfo input)
+        private static Task GenerateFromAssemblyFile(FileInfo input, StreamWriter writer)
         {
             //TODO
 
-            return GenerateFromFile(input);
+            return GenerateFromFile(input, writer);
         }
 
-        private static async Task<string> GenerateFromFile(FileInfo input)
+        private static async Task GenerateFromFile(FileInfo input, StreamWriter writer)
         {
             CharCode charCode;
             string text;
@@ -42,27 +76,26 @@ namespace NuGetCalcWeb
 
             if (text != null)
             {
-                return string.Format(@"<pre><code>{0}</code></pre>",
-                    await Highlight(text).ConfigureAwait(false));
+                await writer.WriteAsync("<pre><code>").ConfigureAwait(false);
+                await writer.WriteAsync(await Highlight(text).ConfigureAwait(false)).ConfigureAwait(false);
+                await writer.WriteLineAsync("</code></pre>").ConfigureAwait(false);
             }
-
-            if (charCode == FileType.EMPTYFILE)
+            else if (charCode == FileType.EMPTYFILE)
             {
-                return @"<p class=""alert alert-warning"">This is an empty file.</p>";
+                await writer.WriteLineAsync(@"<p class=""alert alert-warning"">This is an empty file.</p>").ConfigureAwait(false);
             }
-
-            if (charCode is FileType.Image)
+            else if (charCode is FileType.Image)
             {
-                var sb = new StringBuilder(@"<div style=""text-align:center""><img style=""max-width:100%"" src=""data:");
-                sb.Append(
-                    charCode == FileType.BMP ? "image/x-ms-bmp"
-                    : charCode == FileType.GIF ? "image/gif"
-                    : charCode == FileType.IMGICON ? "image/vnd.microsoft.icon"
-                    : charCode == FileType.JPEG ? "image/jpeg"
-                    : charCode == FileType.PNG ? "image/png"
-                    : charCode == FileType.TIFF ? "image/tiff"
-                    : "application/octet-stream");
-                sb.Append(";base64,");
+                await writer.WriteAsync(string.Format(
+                    @"<div style=""text-align:center""><img style=""max-width:100%"" src=""data:{0};base64,",
+                    (charCode == FileType.BMP ? "image/x-ms-bmp"
+                        : charCode == FileType.GIF ? "image/gif"
+                        : charCode == FileType.IMGICON ? "image/vnd.microsoft.icon"
+                        : charCode == FileType.JPEG ? "image/jpeg"
+                        : charCode == FileType.PNG ? "image/png"
+                        : charCode == FileType.TIFF ? "image/tiff"
+                        : "application/octet-stream")
+                )).ConfigureAwait(false);
 
                 using (var stream = input.OpenRead())
                 {
@@ -71,17 +104,18 @@ namespace NuGetCalcWeb
                     int count;
                     while (true)
                     {
-                        count = stream.Read(buf, 0, bufSize);
+                        count = await stream.ReadAsync(buf, 0, bufSize).ConfigureAwait(false);
                         if (count == 0) break;
-                        sb.Append(Convert.ToBase64String(buf, 0, count));
+                        await writer.WriteAsync(Convert.ToBase64String(buf, 0, count)).ConfigureAwait(false);
                     }
                 }
 
-                sb.Append(@""" /></div>");
-                return sb.ToString();
+                await writer.WriteLineAsync(@""" /></div>").ConfigureAwait(false);
             }
-
-            return @"<p class=""alert alert-warning"">This is a binary file.</p>";
+            else
+            {
+                await writer.WriteLineAsync(@"<p class=""alert alert-warning"">This is a binary file.</p>").ConfigureAwait(false);
+            }
         }
 
         private static Task<string> Highlight(string code)

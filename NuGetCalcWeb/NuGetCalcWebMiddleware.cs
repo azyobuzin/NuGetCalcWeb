@@ -357,27 +357,11 @@ namespace NuGetCalcWeb
                     if (!file.Exists)
                         goto NOT_FOUND;
 
-                    var splitedFileName = file.FullName.Split(Path.DirectorySeparatorChar);
-                    var htmlFile = new FileInfo(Path.Combine("App_Data", "html", Path.Combine(
-                        splitedFileName.Skip(Array.LastIndexOf(splitedFileName, "App_Data")).ToArray())));
-
-                    string content;
-                    if (htmlFile.Exists)
-                    {
-                        content = File.ReadAllText(htmlFile.FullName);
-                    }
-                    else
-                    {
-                        content = await FilePreviewGenerator.GenerateHtml(file).ConfigureAwait(false);
-                        Directory.CreateDirectory(htmlFile.DirectoryName);
-                        File.WriteAllText(htmlFile.FullName, content);
-                    }
-
                     context.Response.View("FilePreview", new FilePreviewModel()
                     {
                         Identity = package.GetIdentity(),
                         Breadcrumbs = s,
-                        Content = content
+                        Content = await FilePreviewGenerator.GenerateHtml(file).ConfigureAwait(false)
                     });
                 }
             }
