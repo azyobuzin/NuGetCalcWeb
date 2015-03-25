@@ -1,17 +1,25 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using Hnx8.ReadJEnc;
+using ICSharpCode.Decompiler;
+using ICSharpCode.Decompiler.Ast;
+using ICSharpCode.NRefactory.Documentation;
+using Mono.Cecil;
 
 namespace NuGetCalcWeb
 {
     public static class FilePreviewGenerator
     {
+        private const string HighlightCss = @"<link rel=""stylesheet"" href=""https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/vs.min.css"">";
+
         private static ConcurrentDictionary<string, Task<string>> tasks = new ConcurrentDictionary<string, Task<string>>(StringComparer.OrdinalIgnoreCase);
 
         public static async Task<string> GenerateHtml(FileInfo input)
@@ -52,11 +60,147 @@ namespace NuGetCalcWeb
             return result;
         }
 
-        private static Task GenerateFromAssemblyFile(FileInfo input, StreamWriter writer)
+        private static async Task GenerateFromAssemblyFile(FileInfo input, StreamWriter writer)
         {
-            //TODO
+            ModuleDefinition module = null;
+            try
+            {
+                module = ModuleDefinition.ReadModule(input.FullName, new ReaderParameters()
+                {
+                    AssemblyResolver = new MyAssemblyResolver()
+                });
+            }
+            catch (BadImageFormatException) { }
 
-            return GenerateFromFile(input, writer);
+            if (module == null)
+                await GenerateFromFile(input, writer).ConfigureAwait(false);
+
+            XmlDocumentationProvider xmlDoc = null;
+            var xmlFile = Path.ChangeExtension(module.FullyQualifiedName, ".xml");
+            if (File.Exists(xmlFile))
+            {
+                try
+                {
+                    xmlDoc = new XmlDocumentationProvider(xmlFile);
+                }
+                catch (Exception ex)
+                {
+                    Debug.Fail(ex.ToString());
+                }
+            }
+
+            await writer.WriteLineAsync(string.Format(HighlightCss +
+                @"<div class=""row""><div id=""type-list"" class=""col-sm-4""><a id=""link-asm"" href=""#asm"">{0}</a><ul>",
+                module.Assembly.Name.Name
+            )).ConfigureAwait(false);
+
+            var types = new List<TypeDefinition>();
+            foreach (var g in module.Types.Where(t => t.IsPublic).GroupBy(t => t.Namespace).OrderBy(g => g.Key))
+            {
+                await writer.WriteLineAsync(string.Format(@"<li class=""namespace""><a class=""link-namespace"" href=""#"">{0}</a><ul>", g.Key)).ConfigureAwait(false);
+                foreach (var t in g.OrderBy(t => t.Name))
+                    await WriteClass(t, writer, types).ConfigureAwait(false);
+                await writer.WriteLineAsync("</ul></li>").ConfigureAwait(false);
+            }
+
+            await writer.WriteLineAsync(string.Format(
+                @"</ul></div><div id=""typedesc-container"" class=""col-sm-8""><pre id=""asm"" class=""typedesc active"">{0}</pre>",
+                await HighlightCs(GenerateAssemblyDescription(module)).ConfigureAwait(false)
+            )).ConfigureAwait(false);
+
+            var tasks = new Task[types.Count];
+
+            using (var genSemaphore = new SemaphoreSlim(4))
+            using (var writeSemaphore = new SemaphoreSlim(1))
+            {
+                for (var i = 0; i < types.Count; i++)
+                {
+                    var type = types[i];
+                    tasks[i] = Task.Run(async () =>
+                    {
+                        await genSemaphore.WaitAsync().ConfigureAwait(false);
+                        string html;
+                        try
+                        {
+                            Debug.WriteLine(type.FullName);
+                            html = string.Format(
+                                @"<pre class=""typedesc"" id=""t{0}"">{1}</pre>",
+                                type.MetadataToken.RID.ToString("x"),
+                                await HighlightCs(GenerateTypeDescription(module, type)).ConfigureAwait(false)
+                            );
+                        }
+                        finally
+                        {
+                            genSemaphore.Release();
+                        }
+
+                        await writeSemaphore.WaitAsync().ConfigureAwait(false);
+                        try
+                        {
+                            await writer.WriteLineAsync(html).ConfigureAwait(false);
+                        }
+                        finally
+                        {
+                            writeSemaphore.Release();
+                        }
+                    });
+                }
+
+                await Task.WhenAll(tasks).ConfigureAwait(false);
+            }
+
+            await writer.WriteLineAsync(@"</div></div><script src=""/content/asmbrowser.js""></script>").ConfigureAwait(false);
+        }
+
+        private static async Task WriteClass(TypeDefinition type, StreamWriter writer, List<TypeDefinition> types)
+        {
+            types.Add(type);
+            var kind = type.IsEnum ? "enum"
+                : type.IsValueType ? "struct"
+                : type.IsInterface ? "interface"
+                : type.IsDelegate() ? "delegate"
+                : "class";
+            await writer.WriteLineAsync(string.Format(
+                @"<li class=""type""><a class=""link-type {2}"" href=""#t{0}"" data-rid=""{0}"">{1}</a>",
+                type.MetadataToken.RID.ToString("x"),
+                type.Name,
+                kind
+            )).ConfigureAwait(false);
+
+            var nested = type.NestedTypes.Where(t => t.IsPublic || t.IsNestedPublic).OrderBy(t => t.Name).ToArray();
+            if (nested.Length > 0)
+            {
+                await writer.WriteLineAsync("<ul>").ConfigureAwait(false);
+                foreach (var t in nested)
+                {
+                    await WriteClass(t, writer, types).ConfigureAwait(false);
+                }
+                await writer.WriteLineAsync("</ul>").ConfigureAwait(false);
+            }
+
+            await writer.WriteLineAsync("</li>").ConfigureAwait(false);
+        }
+
+        private static string GenerateAssemblyDescription(ModuleDefinition module)
+        {
+            var context = new DecompilerContext(module);
+            var astBuilder = new AstBuilder(context) { DecompileMethodBodies = false };
+            astBuilder.AddAssembly(module, true);
+            var output = new PlainTextOutput();
+            astBuilder.GenerateCode(output);
+            return output.ToString();
+        }
+
+        private static string GenerateTypeDescription(ModuleDefinition module, TypeDefinition type)
+        {
+            var context = new DecompilerContext(module);
+            var astBuilder = new AstBuilder(context) { DecompileMethodBodies = false };
+            astBuilder.AddType(type);
+            astBuilder.RunTransformations();
+            //TODO: Add XML Documentation
+            var output = new PlainTextOutput();
+            astBuilder.GenerateCode(output);
+            return output.ToString();
         }
 
         private static async Task GenerateFromFile(FileInfo input, StreamWriter writer)
@@ -76,9 +220,9 @@ namespace NuGetCalcWeb
 
             if (text != null)
             {
-                await writer.WriteAsync(@"<link rel=""stylesheet"" href=""https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/vs.min.css""><pre><code>").ConfigureAwait(false);
-                await writer.WriteAsync(await Highlight(text).ConfigureAwait(false)).ConfigureAwait(false);
-                await writer.WriteLineAsync("</code></pre>").ConfigureAwait(false);
+                await writer.WriteAsync(HighlightCss + "<pre>").ConfigureAwait(false);
+                await writer.WriteAsync(await HighlightAuto(text).ConfigureAwait(false)).ConfigureAwait(false);
+                await writer.WriteLineAsync("</pre>").ConfigureAwait(false);
             }
             else if (charCode == FileType.EMPTYFILE)
             {
@@ -118,22 +262,20 @@ namespace NuGetCalcWeb
             }
         }
 
-        private static Task<string> Highlight(string code)
+        private static Task<string> HighlightAuto(string code)
         {
-            var p = Process.Start(new ProcessStartInfo("node")
-            {
-                UseShellExecute = false,
-                WorkingDirectory = Environment.CurrentDirectory,
-                RedirectStandardInput = true,
-                RedirectStandardOutput = true
-            });
-            using (var stdin = p.StandardInput)
-            {
-                stdin.Write("process.stdout.write(require('highlight.js').highlightAuto(");
-                stdin.Write(HttpUtility.JavaScriptStringEncode(code, true));
-                stdin.Write(").value)");
-            }
-            return p.StandardOutput.ReadToEndAsync();
+            return NodeRunner.Run(string.Format(
+                "process.stdout.write(require('highlight.js').highlightAuto({0}).value)",
+                HttpUtility.JavaScriptStringEncode(code, true)
+            ));
+        }
+
+        private static Task<string> HighlightCs(string code)
+        {
+            return NodeRunner.Run(string.Format(
+                "process.stdout.write(require('highlight.js').highlight('cs', {0}, true).value)",
+                HttpUtility.JavaScriptStringEncode(code, true)
+            ));
         }
     }
 }

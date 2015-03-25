@@ -2,6 +2,10 @@
     margin-bottom: 60px;
 }
 
+pre {
+    word-wrap: normal;
+}
+
 .display-none {
     display: none;
 }
@@ -24,4 +28,50 @@
 
 .file-size {
     width: 7em;
+}
+
+#type-list {
+    overflow: auto;
+}
+
+.typedesc {
+    display: none;
+}
+
+.typedesc.active {
+    display: block;
+}
+
+.link-namespace:before {
+    content: '{ } ';
+    color: black;
+}
+
+.link-type:before {    
+    color: gray;
+    font-size: 80%;
+}
+
+.enum:before {
+    content: "enum ";
+}
+
+.struct:before {
+    content: "struct ";
+}
+
+.interface:before {
+    content: "interface ";
+}
+
+.delegate:before {
+    content: "delegate ";
+}
+
+.class:before {
+    content: "class ";
+}
+
+#type-list ul {
+    list-style-type: none;
 }
