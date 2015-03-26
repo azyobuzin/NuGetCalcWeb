@@ -189,6 +189,219 @@
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\Ast\Annotations.cs">
+      <Link>lib\ICSharpCode.Decompiler\Ast\Annotations.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\Ast\AstBuilder.cs">
+      <Link>lib\ICSharpCode.Decompiler\Ast\AstBuilder.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\Ast\AstMethodBodyBuilder.cs">
+      <Link>lib\ICSharpCode.Decompiler\Ast\AstMethodBodyBuilder.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\Ast\CommentStatement.cs">
+      <Link>lib\ICSharpCode.Decompiler\Ast\CommentStatement.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\Ast\DecompilerContext.cs">
+      <Link>lib\ICSharpCode.Decompiler\Ast\DecompilerContext.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\Ast\NameVariables.cs">
+      <Link>lib\ICSharpCode.Decompiler\Ast\NameVariables.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\Ast\NRefactoryExtensions.cs">
+      <Link>lib\ICSharpCode.Decompiler\Ast\NRefactoryExtensions.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\Ast\TextOutputFormatter.cs">
+      <Link>lib\ICSharpCode.Decompiler\Ast\TextOutputFormatter.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\Ast\Transforms\AddCheckedBlocks.cs">
+      <Link>lib\ICSharpCode.Decompiler\Ast\Transforms\AddCheckedBlocks.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\Ast\Transforms\CombineQueryExpressions.cs">
+      <Link>lib\ICSharpCode.Decompiler\Ast\Transforms\CombineQueryExpressions.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\Ast\Transforms\ContextTrackingVisitor.cs">
+      <Link>lib\ICSharpCode.Decompiler\Ast\Transforms\ContextTrackingVisitor.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\Ast\Transforms\ConvertConstructorCallIntoInitializer.cs">
+      <Link>lib\ICSharpCode.Decompiler\Ast\Transforms\ConvertConstructorCallIntoInitializer.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\Ast\Transforms\CustomPatterns.cs">
+      <Link>lib\ICSharpCode.Decompiler\Ast\Transforms\CustomPatterns.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\Ast\Transforms\DecimalConstantTransform.cs">
+      <Link>lib\ICSharpCode.Decompiler\Ast\Transforms\DecimalConstantTransform.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\Ast\Transforms\DeclareVariables.cs">
+      <Link>lib\ICSharpCode.Decompiler\Ast\Transforms\DeclareVariables.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\Ast\Transforms\DelegateConstruction.cs">
+      <Link>lib\ICSharpCode.Decompiler\Ast\Transforms\DelegateConstruction.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\Ast\Transforms\ExpressionTreeConverter.cs">
+      <Link>lib\ICSharpCode.Decompiler\Ast\Transforms\ExpressionTreeConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\Ast\Transforms\FlattenSwitchBlocks.cs">
+      <Link>lib\ICSharpCode.Decompiler\Ast\Transforms\FlattenSwitchBlocks.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\Ast\Transforms\IntroduceExtensionMethods.cs">
+      <Link>lib\ICSharpCode.Decompiler\Ast\Transforms\IntroduceExtensionMethods.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\Ast\Transforms\IntroduceQueryExpressions.cs">
+      <Link>lib\ICSharpCode.Decompiler\Ast\Transforms\IntroduceQueryExpressions.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\Ast\Transforms\IntroduceUnsafeModifier.cs">
+      <Link>lib\ICSharpCode.Decompiler\Ast\Transforms\IntroduceUnsafeModifier.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\Ast\Transforms\IntroduceUsingDeclarations.cs">
+      <Link>lib\ICSharpCode.Decompiler\Ast\Transforms\IntroduceUsingDeclarations.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\Ast\Transforms\PatternStatementTransform.cs">
+      <Link>lib\ICSharpCode.Decompiler\Ast\Transforms\PatternStatementTransform.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\Ast\Transforms\PushNegation.cs">
+      <Link>lib\ICSharpCode.Decompiler\Ast\Transforms\PushNegation.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\Ast\Transforms\ReplaceMethodCallsWithOperators.cs">
+      <Link>lib\ICSharpCode.Decompiler\Ast\Transforms\ReplaceMethodCallsWithOperators.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\Ast\Transforms\TransformationPipeline.cs">
+      <Link>lib\ICSharpCode.Decompiler\Ast\Transforms\TransformationPipeline.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\Ast\TypesHierarchyHelpers.cs">
+      <Link>lib\ICSharpCode.Decompiler\Ast\TypesHierarchyHelpers.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\CecilExtensions.cs">
+      <Link>lib\ICSharpCode.Decompiler\CecilExtensions.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\CodeMappings.cs">
+      <Link>lib\ICSharpCode.Decompiler\CodeMappings.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\DecompilerException.cs">
+      <Link>lib\ICSharpCode.Decompiler\DecompilerException.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\DecompilerSettings.cs">
+      <Link>lib\ICSharpCode.Decompiler\DecompilerSettings.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\Disassembler\DisassemblerHelpers.cs">
+      <Link>lib\ICSharpCode.Decompiler\Disassembler\DisassemblerHelpers.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\Disassembler\ILStructure.cs">
+      <Link>lib\ICSharpCode.Decompiler\Disassembler\ILStructure.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\Disassembler\MethodBodyDisassembler.cs">
+      <Link>lib\ICSharpCode.Decompiler\Disassembler\MethodBodyDisassembler.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\Disassembler\ReflectionDisassembler.cs">
+      <Link>lib\ICSharpCode.Decompiler\Disassembler\ReflectionDisassembler.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\FlowAnalysis\ControlFlowEdge.cs">
+      <Link>lib\ICSharpCode.Decompiler\FlowAnalysis\ControlFlowEdge.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\FlowAnalysis\ControlFlowGraph.cs">
+      <Link>lib\ICSharpCode.Decompiler\FlowAnalysis\ControlFlowGraph.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\FlowAnalysis\ControlFlowGraphBuilder.cs">
+      <Link>lib\ICSharpCode.Decompiler\FlowAnalysis\ControlFlowGraphBuilder.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\FlowAnalysis\ControlFlowNode.cs">
+      <Link>lib\ICSharpCode.Decompiler\FlowAnalysis\ControlFlowNode.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\FlowAnalysis\ControlStructureDetector.cs">
+      <Link>lib\ICSharpCode.Decompiler\FlowAnalysis\ControlStructureDetector.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\FlowAnalysis\OpCodeInfo.cs">
+      <Link>lib\ICSharpCode.Decompiler\FlowAnalysis\OpCodeInfo.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\FlowAnalysis\SimplifyByRefCalls.cs">
+      <Link>lib\ICSharpCode.Decompiler\FlowAnalysis\SimplifyByRefCalls.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\FlowAnalysis\SsaBlock.cs">
+      <Link>lib\ICSharpCode.Decompiler\FlowAnalysis\SsaBlock.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\FlowAnalysis\SsaForm.cs">
+      <Link>lib\ICSharpCode.Decompiler\FlowAnalysis\SsaForm.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\FlowAnalysis\SsaFormBuilder.cs">
+      <Link>lib\ICSharpCode.Decompiler\FlowAnalysis\SsaFormBuilder.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\FlowAnalysis\SsaInstruction.cs">
+      <Link>lib\ICSharpCode.Decompiler\FlowAnalysis\SsaInstruction.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\FlowAnalysis\SsaOptimization.cs">
+      <Link>lib\ICSharpCode.Decompiler\FlowAnalysis\SsaOptimization.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\FlowAnalysis\SsaVariable.cs">
+      <Link>lib\ICSharpCode.Decompiler\FlowAnalysis\SsaVariable.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\FlowAnalysis\TransformToSsa.cs">
+      <Link>lib\ICSharpCode.Decompiler\FlowAnalysis\TransformToSsa.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\ILAst\AsyncDecompiler.cs">
+      <Link>lib\ICSharpCode.Decompiler\ILAst\AsyncDecompiler.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\ILAst\DefaultDictionary.cs">
+      <Link>lib\ICSharpCode.Decompiler\ILAst\DefaultDictionary.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\ILAst\GotoRemoval.cs">
+      <Link>lib\ICSharpCode.Decompiler\ILAst\GotoRemoval.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\ILAst\ILAstBuilder.cs">
+      <Link>lib\ICSharpCode.Decompiler\ILAst\ILAstBuilder.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\ILAst\ILAstOptimizer.cs">
+      <Link>lib\ICSharpCode.Decompiler\ILAst\ILAstOptimizer.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\ILAst\ILAstTypes.cs">
+      <Link>lib\ICSharpCode.Decompiler\ILAst\ILAstTypes.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\ILAst\ILCodes.cs">
+      <Link>lib\ICSharpCode.Decompiler\ILAst\ILCodes.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\ILAst\ILInlining.cs">
+      <Link>lib\ICSharpCode.Decompiler\ILAst\ILInlining.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\ILAst\InitializerPeepholeTransforms.cs">
+      <Link>lib\ICSharpCode.Decompiler\ILAst\InitializerPeepholeTransforms.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\ILAst\LiftedOperators.cs">
+      <Link>lib\ICSharpCode.Decompiler\ILAst\LiftedOperators.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\ILAst\LoopsAndConditions.cs">
+      <Link>lib\ICSharpCode.Decompiler\ILAst\LoopsAndConditions.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\ILAst\PatternMatching.cs">
+      <Link>lib\ICSharpCode.Decompiler\ILAst\PatternMatching.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\ILAst\PeepholeTransform.cs">
+      <Link>lib\ICSharpCode.Decompiler\ILAst\PeepholeTransform.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\ILAst\SimpleControlFlow.cs">
+      <Link>lib\ICSharpCode.Decompiler\ILAst\SimpleControlFlow.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\ILAst\StateRange.cs">
+      <Link>lib\ICSharpCode.Decompiler\ILAst\StateRange.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\ILAst\SymbolicExecution.cs">
+      <Link>lib\ICSharpCode.Decompiler\ILAst\SymbolicExecution.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\ILAst\TypeAnalysis.cs">
+      <Link>lib\ICSharpCode.Decompiler\ILAst\TypeAnalysis.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\ILAst\YieldReturnDecompiler.cs">
+      <Link>lib\ICSharpCode.Decompiler\ILAst\YieldReturnDecompiler.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\ITextOutput.cs">
+      <Link>lib\ICSharpCode.Decompiler\ITextOutput.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\PlainTextOutput.cs">
+      <Link>lib\ICSharpCode.Decompiler\PlainTextOutput.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\ReferenceResolvingException.cs">
+      <Link>lib\ICSharpCode.Decompiler\ReferenceResolvingException.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\TextOutputWriter.cs">
+      <Link>lib\ICSharpCode.Decompiler\TextOutputWriter.cs</Link>
+    </Compile>
     <Compile Include="..\lib\ILSpy\ILSpy\XmlDoc\AddXmlDocTransform.cs">
       <Link>lib\ILSpy\XmlDoc\AddXmlDocTransform.cs</Link>
     </Compile>
@@ -217,10 +430,6 @@
     <Compile Include="ViewModels\PackageSelectorModel.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\lib\ILSpy\ICSharpCode.Decompiler\ICSharpCode.Decompiler.csproj">
-      <Project>{984cc812-9470-4a13-aff9-cc44068d666c}</Project>
-      <Name>ICSharpCode.Decompiler</Name>
-    </ProjectReference>
     <ProjectReference Include="..\lib\ILSpy\Mono.Cecil\Mono.Cecil.csproj">
       <Project>{d68133bd-1e63-496e-9ede-4fbdbf77b486}</Project>
       <Name>Mono.Cecil</Name>
