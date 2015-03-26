@@ -12,7 +12,7 @@ using Hnx8.ReadJEnc;
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.Ast;
 using ICSharpCode.ILSpy.XmlDoc;
-using ICSharpCode.NRefactory.Documentation;
+using ICSharpCode.NRefactory.CSharp;
 using Mono.Cecil;
 
 namespace NuGetCalcWeb
@@ -84,6 +84,7 @@ namespace NuGetCalcWeb
             {
                 module = ModuleDefinition.ReadModule(input.FullName, new ReaderParameters()
                 {
+                    ReadingMode = ReadingMode.Immediate,
                     AssemblyResolver = new MyAssemblyResolver()
                 });
             }
@@ -199,6 +200,22 @@ namespace NuGetCalcWeb
             var context = new DecompilerContext(module);
             var astBuilder = new AstBuilder(context) { DecompileMethodBodies = false };
             astBuilder.AddType(type);
+
+            if (!(type.IsEnum || type.IsDelegate()))
+            {
+                var typeNode = astBuilder.SyntaxTree.GetTypes(false).First();
+
+                // Remove nested types
+                foreach (var node in typeNode.Children)
+                    if (node is TypeDeclaration)
+                        node.Remove();
+
+                // Remove non-public members
+                foreach (var member in typeNode.Members)
+                    if (!(member.HasModifier(Modifiers.Public) || member.HasModifier(Modifiers.Protected)))
+                        member.Remove();
+            }
+
             astBuilder.RunTransformations();
             AddXmlDocTransform.Run(astBuilder.SyntaxTree);
             var output = new PlainTextOutput();
