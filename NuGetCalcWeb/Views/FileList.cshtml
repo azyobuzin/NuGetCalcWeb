@@ -1,72 +1,60 @@
 ﻿@using NuGetCalcWeb.ViewModels
 @inherits AppTemplateBase<FileListModel>
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8" />
-    <title>@(Model.Breadcrumbs.Length == 0 ? Model.Identity.ToString() : Model.Breadcrumbs[Model.Breadcrumbs.Length - 1])</title>
-    <meta name="robots" content="noindex" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/content/style.css" />
-    @ExternalSnippets.Default.Analytics
-    <script src="http://code.jquery.com/jquery-2.1.3.min.js"></script>
-</head>
-<body>
-    @Include("_Header")
+@{
+    Layout = "_Layout";
+    ViewBag.Title = Model.Breadcrumbs.Length == 0 ? Model.Identity.ToString() : Model.Breadcrumbs[Model.Breadcrumbs.Length - 1];
+    ViewBag.NoIndex = true;
+}
 
-    <div class="container">
-        <ol class="breadcrumb">
-            @if (Model.Breadcrumbs.Length == 0)
-            {
-                <li>@Model.Identity</li>
-            }
-            else
-            {
-                <li><a href="@("../".Times(Model.Breadcrumbs.Length))">@Model.Identity</a></li>
-            }            
-            @for (var i = 0; i < Model.Breadcrumbs.Length - 1; i++)
-            {
-                <li><a href="@("../".Times(Model.Breadcrumbs.Length - i - 1))">
-                    @Model.Breadcrumbs[i]
-                </a></li>
-            }
-            @if (Model.Breadcrumbs.Length > 0)
-            {
-                <li>@Model.Breadcrumbs[Model.Breadcrumbs.Length - 1]</li>
-            }
-        </ol>
+<div class="container">
+    <ol class="breadcrumb">
+        @if (Model.Breadcrumbs.Length == 0)
+        {
+            <li>@Model.Identity</li>
+        }
+        else
+        {
+            <li><a href="@("../".Times(Model.Breadcrumbs.Length))">@Model.Identity</a></li>
+        }            
+        @for (var i = 0; i < Model.Breadcrumbs.Length - 1; i++)
+        {
+            <li><a href="@("../".Times(Model.Breadcrumbs.Length - i - 1))">
+                @Model.Breadcrumbs[i]
+            </a></li>
+        }
+        @if (Model.Breadcrumbs.Length > 0)
+        {
+            <li>@Model.Breadcrumbs[Model.Breadcrumbs.Length - 1]</li>
+        }
+    </ol>
 
-        @ExternalSnippets.Default.AdTop
-        <table class="table table-striped">
-            <thead>
+    @ExternalSnippets.Default.AdTop
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th><br /></th>
+                <th>Name</th>
+                <th>Size</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var d in Model.Directories)
+            {
                 <tr>
-                    <th><br /></th>
-                    <th>Name</th>
-                    <th>Size</th>
+                    <td class="file-icon"><span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span></td>
+                    <td class="file-name"><a href="@d.Name/">@d.Name</a></td>
+                    <td class="file-size"><br /></td>
                 </tr>
-            </thead>
-            <tbody>
-                @foreach (var d in Model.Directories)
-                {
-                    <tr>
-                        <td class="file-icon"><span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span></td>
-                        <td class="file-name"><a href="@d.Name/">@d.Name</a></td>
-                        <td class="file-size"><br /></td>
-                    </tr>
-                }
-                @foreach (var f in Model.Files)
-                {
-                    <tr>
-                        <td class="file-icon"><span class="glyphicon glyphicon-file" aria-hidden="true"></span></td>
-                        <td class="file-name"><a href="@f.Name">@f.Name</a></td>
-                        <td class="file-size">@f.Length.HumanizeBytes()</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
+            }
+            @foreach (var f in Model.Files)
+            {
+                <tr>
+                    <td class="file-icon"><span class="glyphicon glyphicon-file" aria-hidden="true"></span></td>
+                    <td class="file-name"><a href="@f.Name">@f.Name</a></td>
+                    <td class="file-size">@f.Length.HumanizeBytes()</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
 
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js" async></script>
-</body>
-</html>

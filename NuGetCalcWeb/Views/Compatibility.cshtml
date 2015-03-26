@@ -1,74 +1,60 @@
 ﻿@using NuGetCalcWeb.ViewModels
 @inherits AppTemplateBase<CompatibilityModel>
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8" />
-    <title>Compatibility Result - NuGetCalc</title>
-    <meta name="robots" content="noindex" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/content/style.css" />
-    @ExternalSnippets.Default.Analytics
-    <script src="http://code.jquery.com/jquery-2.1.3.min.js"></script>
-</head>
-<body>
-    @Include("_Header")
+@{
+    Layout = "_Layout";
+    ViewBag.Title = "Compatibility Result - NuGetCalc";
+}
 
-    <div class="container">
-        <h1>Find The Most Compatible Reference Assemblies</h1>
-        @ExternalSnippets.Default.AdTop
-        <div class="row">
-            <div class="col-sm-5" id="compatibility-pkgselector">
-                @Include("_PackageSelector", Model.PackageSelector, typeof(PackageSelectorModel))
-            </div>
-            <div class="col-sm-7">
-                @if (Model.Error == null)
+<div class="container">
+    <h1>Find The Most Compatible Reference Assemblies</h1>
+    @ExternalSnippets.Default.AdTop
+    <div class="row">
+        <div class="col-sm-5" id="compatibility-pkgselector">
+            @Include("_PackageSelector", Model.PackageSelector, typeof(PackageSelectorModel))
+        </div>
+        <div class="col-sm-7">
+            @if (Model.Error == null)
+            {
+                <h2>Result</h2>
+                <h3>Reference Assemblies</h3>
+                if (!Model.ReferenceAssemblies.IsNullOrEmpty())
                 {
-                    <h2>Result</h2>
-                    <h3>Reference Assemblies</h3>
-                    if (!Model.ReferenceAssemblies.IsNullOrEmpty())
-                    {
-                        <ul>
-                            @foreach (var file in Model.ReferenceAssemblies)
-                            {
-                                <li>@file</li>
-                            }
-                        </ul>
-                    }
-                    else
-                    {
-                        <p>No assembly to add your project</p>
-                    }
-                    
-                    <h3>Dependencies</h3>
-                    if (!Model.Dependencies.IsNullOrEmpty())
-                    {
-                        <ul>
-                            @foreach (var dependency in Model.Dependencies)
-                            {
-                                <li>@dependency</li>
-                            }
-                        </ul>
-                    }
-                    else
-                    {
-                        <p>No dependency</p>
-                    }
+                    <ul>
+                        @foreach (var file in Model.ReferenceAssemblies)
+                        {
+                            <li>@file</li>
+                        }
+                    </ul>
                 }
                 else
                 {
-                    <h2>Error</h2>
-                    <p>@Model.Error</p>
-                    if (Model.Exception != null)
-                    {
-                        <pre>@Model.Exception</pre>
-                    }
+                    <p>No assembly to add your project</p>
                 }
-            </div>
+                    
+                <h3>Dependencies</h3>
+                if (!Model.Dependencies.IsNullOrEmpty())
+                {
+                    <ul>
+                        @foreach (var dependency in Model.Dependencies)
+                        {
+                            <li>@dependency</li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p>No dependency</p>
+                }
+            }
+            else
+            {
+                <h2>Error</h2>
+                <p>@Model.Error</p>
+                if (Model.Exception != null)
+                {
+                    <pre>@Model.Exception</pre>
+                }
+            }
         </div>
     </div>
-
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js" async></script>
-</body>
-</html>
+</div>
