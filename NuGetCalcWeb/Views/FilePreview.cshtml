@@ -15,7 +15,7 @@
 <body>
     @Include("_Header")
 
-    <div class="container">
+    <div class="container-fluid">
         <ol class="breadcrumb">
             <li><a href="@(Model.Breadcrumbs.Length == 1 ? "./" : "../".Times(Model.Breadcrumbs.Length - 1))">@Model.Identity</a></li>
             @for (int i = 0, j = Model.Breadcrumbs.Length - 2; i < Model.Breadcrumbs.Length - 1; i++, j--)

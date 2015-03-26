@@ -11,6 +11,7 @@ using System.Web;
 using Hnx8.ReadJEnc;
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.Ast;
+using ICSharpCode.ILSpy.XmlDoc;
 using ICSharpCode.NRefactory.Documentation;
 using Mono.Cecil;
 
@@ -34,30 +35,46 @@ namespace NuGetCalcWeb
                     return await sr.ReadToEndAsync().ConfigureAwait(false);
             }
 
-            var result = await tasks.GetOrAdd(fullName, _ => Task.Run(async () =>
+            try
             {
-                Debug.WriteLine("Generating " + input.Name);
-                Directory.CreateDirectory(htmlFile.DirectoryName);
-                using (var stream = new FileStream(htmlFile.FullName, FileMode.Create, FileAccess.ReadWrite))
+                return await tasks.GetOrAdd(fullName, _ => Task.Run(async () =>
                 {
-                    using (var sw = new StreamWriter(stream, Encoding.UTF8, 1024, true))
+                    Debug.WriteLine("Generating " + input.Name);
+                    Directory.CreateDirectory(htmlFile.DirectoryName);
+                    try
                     {
-                        var ext = input.Extension;
-                        await (ext == ".dll" || ext == ".exe"
-                            ? GenerateFromAssemblyFile(input, sw)
-                            : GenerateFromFile(input, sw)
-                        ).ConfigureAwait(false);
+                        using (var stream = new FileStream(htmlFile.FullName, FileMode.Create, FileAccess.ReadWrite))
+                        {
+                            using (var sw = new StreamWriter(stream, Encoding.UTF8, 1024, true))
+                            {
+                                var ext = input.Extension;
+                                await (ext == ".dll" || ext == ".exe"
+                                    ? GenerateFromAssemblyFile(input, sw)
+                                    : GenerateFromFile(input, sw)
+                                ).ConfigureAwait(false);
+                            }
+
+                            stream.Position = 0;
+                            using (var sr = new StreamReader(stream))
+                                return await sr.ReadToEndAsync().ConfigureAwait(false);
+                        }
                     }
-
-                    stream.Position = 0;
-                    using (var sr = new StreamReader(stream))
-                        return await sr.ReadToEndAsync().ConfigureAwait(false);
-                }
-            })).ConfigureAwait(false);
-
-            Task<string> tmp;
-            tasks.TryRemove(fullName, out tmp);
-            return result;
+                    catch
+                    {
+                        try
+                        {
+                            htmlFile.Delete();
+                        }
+                        catch { }
+                        throw;
+                    }
+                })).ConfigureAwait(false);
+            }
+            finally
+            {
+                Task<string> tmp;
+                tasks.TryRemove(fullName, out tmp);
+            }
         }
 
         private static async Task GenerateFromAssemblyFile(FileInfo input, StreamWriter writer)
@@ -75,22 +92,8 @@ namespace NuGetCalcWeb
             if (module == null)
                 await GenerateFromFile(input, writer).ConfigureAwait(false);
 
-            XmlDocumentationProvider xmlDoc = null;
-            var xmlFile = Path.ChangeExtension(module.FullyQualifiedName, ".xml");
-            if (File.Exists(xmlFile))
-            {
-                try
-                {
-                    xmlDoc = new XmlDocumentationProvider(xmlFile);
-                }
-                catch (Exception ex)
-                {
-                    Debug.Fail(ex.ToString());
-                }
-            }
-
             await writer.WriteLineAsync(string.Format(HighlightCss +
-                @"<div class=""row""><div id=""type-list"" class=""col-sm-4""><a id=""link-asm"" href=""#asm"">{0}</a><ul>",
+                @"<div class=""row""><div id=""type-list"" class=""col-lg-3 col-sm-4""><a id=""link-asm"" href=""#asm"">{0}</a><ul>",
                 module.Assembly.Name.Name
             )).ConfigureAwait(false);
 
@@ -104,7 +107,7 @@ namespace NuGetCalcWeb
             }
 
             await writer.WriteLineAsync(string.Format(
-                @"</ul></div><div id=""typedesc-container"" class=""col-sm-8""><pre id=""asm"" class=""typedesc active"">{0}</pre>",
+                @"</ul></div><div id=""typedesc-container"" class=""col-lg-9 col-sm-8""><pre id=""asm"" class=""typedesc active"">{0}</pre>",
                 await HighlightCs(GenerateAssemblyDescription(module)).ConfigureAwait(false)
             )).ConfigureAwait(false);
 
@@ -197,7 +200,7 @@ namespace NuGetCalcWeb
             var astBuilder = new AstBuilder(context) { DecompileMethodBodies = false };
             astBuilder.AddType(type);
             astBuilder.RunTransformations();
-            //TODO: Add XML Documentation
+            AddXmlDocTransform.Run(astBuilder.SyntaxTree);
             var output = new PlainTextOutput();
             astBuilder.GenerateCode(output);
             return output.ToString();

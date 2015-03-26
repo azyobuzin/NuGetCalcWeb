@@ -32,6 +32,7 @@ pre {
 
 #type-list {
     overflow: auto;
+    white-space: nowrap;
 }
 
 .typedesc {

@@ -189,6 +189,15 @@
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\lib\ILSpy\ILSpy\XmlDoc\AddXmlDocTransform.cs">
+      <Link>lib\ILSpy\XmlDoc\AddXmlDocTransform.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ILSpy\XmlDoc\XmlDocKeyProvider.cs">
+      <Link>lib\ILSpy\XmlDoc\XmlDocKeyProvider.cs</Link>
+    </Compile>
+    <Compile Include="..\lib\ILSpy\ILSpy\XmlDoc\XmlDocLoader.cs">
+      <Link>lib\ILSpy\XmlDoc\XmlDocLoader.cs</Link>
+    </Compile>
     <Compile Include="MyAssemblyResolver.cs" />
     <Compile Include="NodeRunner.cs" />
     <Compile Include="NuGetCalcWebMiddleware.cs" />
