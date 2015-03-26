@@ -1,5 +1,6 @@
 ﻿@using NuGetCalcWeb.ViewModels
 @inherits AppTemplateBase<PackageSelectorModel>
+<link rel="stylesheet" href="~/content/typeaheadjs.css" />
 <ul class="nav nav-tabs" role="tablist">
     <li id="tab-repository"><a href="#form-browse" role="tab" data-toggle="tab">Repository</a></li>
     <li id="tab-upload"><a href="#form-upload-browse" role="tab" data-toggle="tab">Upload</a></li>
@@ -58,4 +59,5 @@
         <button type="submit" class="btn btn-primary">Find the most compatible assemblies</button>
     </div>
 </form>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/typeahead.js/0.10.5/typeahead.bundle.min.js"></script>
 <script src="~/content/pkgselector.js"></script>
