@@ -1,0 +1,19 @@
+﻿@using NuGetCalcWeb.ViewModels
+@inherits AppTemplateBase<dynamic>
+@{
+    Layout = "_Layout";
+    ViewBag.Title = "NuGetCalc Web Version";
+}
+
+<div class="container">
+    <section>
+        <h1>Find The Most Compatible Reference Assemblies</h1>
+        @ExternalSnippets.Default.AdTop
+        @Include("_PackageSelector")
+    </section>
+</div>
+
+@section Header
+{
+    <meta name="description" content="Browse and analyze NuGet packages everywhere." />
+}

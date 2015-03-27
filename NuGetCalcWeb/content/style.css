@@ -6,8 +6,9 @@ pre {
     word-wrap: normal;
 }
 
-.display-none {
-    display: none;
+.jumbotron {
+    background-color: white;
+    text-align: center;
 }
 
 .tt-dropdown-menu {

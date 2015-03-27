@@ -84,7 +84,7 @@ namespace NuGetCalcWeb
         private static void Index(IOwinContext context)
         {
             //TODO: caching
-            context.Response.View("Index", new PackageSelectorModel());
+            context.Response.View("Index");
         }
 
         private static async Task Compatibility(IOwinContext context)
@@ -95,9 +95,6 @@ namespace NuGetCalcWeb
             var packageId = q["packageId"];
             var version = q["version"];
             var targetFramework = q["targetFramework"];
-
-            // NuGetFramework.Parse will throw only ArgumentNullException
-            var nugetFramework = NuGetFramework.Parse(targetFramework);
 
             var model = new CompatibilityModel()
             {
@@ -119,9 +116,9 @@ namespace NuGetCalcWeb
                 {
                     if (string.IsNullOrWhiteSpace(packageId))
                     {
-                        statusCode = 400;
-                        model.Error = "Package ID is required.";
-                        goto RESPOND;
+                        // Homepage of NuGetCalc Online
+                        context.Response.View("CompatibilityStatic", model.PackageSelector);
+                        return;
                     }
                     if (string.IsNullOrWhiteSpace(targetFramework))
                     {
@@ -153,6 +150,8 @@ namespace NuGetCalcWeb
                     var identity = package.GetIdentity();
                     model.PackageSelector.DefaultPackageId = identity.Id;
                     model.PackageSelector.DefaultVersion = identity.Version.ToString();
+                    // NuGetFramework.Parse will throw only ArgumentNullException
+                    var nugetFramework = NuGetFramework.Parse(targetFramework);
 
                     var referenceItems = NuGetUtility.FindMostCompatibleReferenceGroup(package, nugetFramework);
                     if (referenceItems != null)

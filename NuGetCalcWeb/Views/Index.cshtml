@@ -5,14 +5,140 @@
     ViewBag.Title = "NuGetCalc";
 }
 
+<div class="jumbotron">
+    <div class="container">
+        <h1>NuGetCalc Project</h1>
+        <p class="lead">Powerful tool for NuGet package creators, package users, and all .NET developers.</p>
+    </div>
+</div>
+<hr />
+@ExternalSnippets.Default.AdTop
 <div class="container">
     <section>
-        <h1>Find The Most Compatible Reference Assemblies</h1>
-        @ExternalSnippets.Default.AdTop
-        @Include("_PackageSelector")
+        <h3>
+            <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+            Solve Your Wonder about the NuGet Package
+        </h3>
+        <div class="row">
+            <div class="col-sm-6 col-md-5 col-lg-4" style="text-align: center">
+                <img src="http://i.gyazo.com/25e8b6dc7cd2e3fed3f2b1f1417fcd82.png" style="width: 100%; margin-bottom: 15px; max-width: 400px" />
+            </div>
+            <div class="col-sm-6 col-md-7 col-lg-8">
+                <p>
+                    <code>portable-net40+sl5+wp80+win8+wpa81</code>?
+                    <code>portable-net45+wp80+win8+wpa81+aspnetcore50</code>?
+                    Which assembly will be added to my project?
+                </p>
+                <p>Have you ever wondered such a question? NuGetCalc solves your problems.</p>
+                <p>NuGetCalc is a tool to find the most compatible assembly to your project's framework.</p>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <h3>
+            <span class="glyphicon glyphicon-console" aria-hidden="true"></span>
+            PowerShell Module
+        </h3>
+        <p>A PowerShell module to check available frameworks and find the most compatible assemblies and dependent packages is available.</p>
+        <p>
+            You can get from <a href="https://github.com/azyobuzin/NuGetCalc">GitHub</a>.
+            In addition, <a href="http://www.nuget.org/packages/NuGetCalc/">a NuGet package</a> to use from the package manager console is available.
+        </p>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a href="#functions" data-toggle="collapse">Functions</a>            
+                </h4>
+            </div>
+            <div id="functions" class="panel-collapse collapse">
+                <div class="panel-body">
+                    <section>
+                        <h4>Get-ReferenceGroups</h4>
+                        <pre>PS C:\> Get-ReferenceGroups Newtonsoft.Json -Version 6.0.8
+TargetFramework                                             Items
+---------------                                             -----
+.NETFramework, Version=v2.0                                 {lib/net20/Newtonsoft.Json.dll}
+.NETFramework, Version=v3.5                                 {lib/net35/Newtonsoft.Json.dll}
+.NETFramework, Version=v4.0                                 {lib/net40/Newtonsoft.Json.dll}
+.NETFramework, Version=v4.5                                 {lib/net45/Newtonsoft.Json.dll}
+.NETCore, Version=v4.5                                      {lib/netcore45/Newtonsoft.Json.dll}
+.NETPortable, Version=v0.0, Profile=Profile328              {lib/portable-net40+sl5+wp80+win8+wpa81/Newtonsoft.Json....
+.NETPortable, Version=v0.0, Profile=net45+wp80+win8+wpa8... {lib/portable-net45+wp80+win8+wpa81+aspnetcore50/Newtons...</pre>
+                    </section>
+                    <section>
+                        <h4>Find-MostCompatibleReferenceGroup</h4>
+                        <pre>PS C:\> Find-MostCompatibleReferenceGroup Newtonsoft.Json portable-Profile5 -Version 6.0.8
+TargetFramework                                             Items
+---------------                                             -----
+.NETPortable, Version=v0.0, Profile=Profile328              {lib/portable-net40+sl5+wp80+win8+wpa81/Newtonsoft.Json....</pre>
+                    </section>
+                    <section>
+                        <h4>Get-DependencyGroups</h4>
+                        <pre>PS C:\> Get-DependencyGroups CoreTweet -Version 0.4.2.97 -Source https://ci.appveyor.com/nuget/coretweet-pvq86631pp8l/
+TargetFramework                                             Packages
+---------------                                             --------
+Any, Version=v0.0                                           {Newtonsoft.Json [6.0.8, )}
+.NETFramework, Version=v3.5                                 {Newtonsoft.Json [4.5.11, )}</pre>
+                    </section>
+                    <section>
+                        <h4>Find-MostCompatibleDependencyGroup</h4>
+                        <pre>PS C:\> Find-MostCompatibleDependencyGroup CoreTweet net45 -Version 0.4.2.97 -Source https://ci.appveyor.com/nuget/coretweet-pvq86631pp8l/
+TargetFramework                                             Packages
+---------------                                             --------
+.NETFramework, Version=v3.5                                 {Newtonsoft.Json [4.5.11, )}</pre>
+                    </section>
+                </div>
+            </div>
+        </div>
+        <p style="text-align: center">
+            <a href="https://github.com/azyobuzin/NuGetCalc/releases" class="btn btn-default btn-lg">
+                <span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span>
+                Download
+            </a>
+        </p>
+    </section>
+
+    <section>
+        <h3>
+            <span class="glyphicon glyphicon-phone" aria-hidden="true"></span>
+            On Your Web Browser
+        </h3>
+        <p>You can use this useful tool in your web browser, of course even on your smartphone.</p>
+        <div class="row">
+            <section class="col-sm-6">
+                <div class="thumbnail">
+                    <img src="http://f.st-hatena.com/images/fotolife/a/azyobuzin/20150327/20150327181226.png" />
+                    <div class="caption">
+                        <h4>
+                            <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                            Compatibility Search
+                        </h4>
+                    </div>
+                </div>
+            </section>
+            <section class="col-sm-6">
+                <div class="thumbnail">
+                    <img src="http://f.st-hatena.com/images/fotolife/a/azyobuzin/20150327/20150327181227.png" />
+                    <div class="caption">
+                        <h4>
+                            <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+                            Package Explorer and Assembly Browser
+                        </h4>
+                    </div>
+                </div>
+            </section>
+        </div>
+        <p style="text-align: center">
+            <a href="~/compatibility" class="btn btn-default btn-lg">
+                <span class="glyphicon glyphicon-thumbs-up" aria-hidden="true"></span>
+                Try it out
+            </a>
+        </p>
     </section>
 </div>
 
-@section Header {
-    <meta name="description" content="Finds which assembly NuGet adds to your project" />
+@section Header
+{
+    <meta name="description" content="Finds which assembly NuGet PM adds to your project on PowerShell, PM Console and also on Web." />
 }
