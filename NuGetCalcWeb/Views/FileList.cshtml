@@ -34,7 +34,7 @@
             <tr>
                 <th><br /></th>
                 <th>Name</th>
-                <th>Size</th>
+                <th>Download</th>
             </tr>
         </thead>
         <tbody>
@@ -51,7 +51,7 @@
                 <tr>
                     <td class="file-icon"><span class="glyphicon glyphicon-file" aria-hidden="true"></span></td>
                     <td class="file-name"><a href="@f.Name">@f.Name</a></td>
-                    <td class="file-size">@f.Length.HumanizeBytes()</td>
+                    <td class="file-size"><a href="@f.Name?dl=true">@f.Length.HumanizeBytes()</a></td>
                 </tr>
             }
         </tbody>

@@ -356,12 +356,22 @@ namespace NuGetCalcWeb
                     if (!file.Exists)
                         goto NOT_FOUND;
 
-                    context.Response.View("FilePreview", new FilePreviewModel()
+                    if (context.Request.Query["dl"] == "true")
                     {
-                        Identity = package.GetIdentity(),
-                        Breadcrumbs = s,
-                        Content = await FilePreviewGenerator.GenerateHtml(file).ConfigureAwait(false)
-                    });
+                        //TODO: cache, Content-Range
+                        context.Response.ContentType = "application/octet-stream";
+                        context.Response.ContentLength = file.Length;
+                        await context.Response.SendFileAsync(file.FullName).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        context.Response.View("FilePreview", new FilePreviewModel()
+                        {
+                            Identity = package.GetIdentity(),
+                            Breadcrumbs = s,
+                            Content = await FilePreviewGenerator.GenerateHtml(file).ConfigureAwait(false)
+                        });
+                    }
                 }
             }
 

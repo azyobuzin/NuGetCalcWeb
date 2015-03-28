@@ -11,7 +11,8 @@ namespace NuGetCalcWeb
     {
         public void Configuration(IAppBuilder app)
         {
-            app.Use<NuGetCalcWebMiddleware>()
+            app.UseSendFileFallback()
+                .Use<NuGetCalcWebMiddleware>()
                 .UseStaticFiles(new StaticFileOptions()
                 {
                     RequestPath = new PathString("/content"),
