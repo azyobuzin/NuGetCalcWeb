@@ -95,13 +95,16 @@ namespace NuGetCalcWeb
 
             await writer.WriteLineAsync(string.Format(HighlightCss +
                 @"<div class=""row""><div id=""type-list"" class=""col-lg-3 col-sm-4""><a id=""link-asm"" href=""#asm"">{0}</a><ul>",
-                module.Assembly.Name.Name
+                HttpUtility.HtmlEncode(module.Assembly.Name.Name)
             )).ConfigureAwait(false);
 
             var types = new List<TypeDefinition>();
             foreach (var g in module.Types.Where(t => t.IsPublic).GroupBy(t => t.Namespace).OrderBy(g => g.Key))
             {
-                await writer.WriteLineAsync(string.Format(@"<li class=""namespace""><a class=""link-namespace"" href=""#"">{0}</a><ul>", g.Key)).ConfigureAwait(false);
+                await writer.WriteLineAsync(string.Format(
+                    @"<li class=""namespace""><a class=""link-namespace"" href=""#"">{0}</a><ul class=""collapse"">",
+                    HttpUtility.HtmlEncode(g.Key)
+                )).ConfigureAwait(false);
                 foreach (var t in g.OrderBy(t => t.Name))
                     await WriteClass(t, writer, types).ConfigureAwait(false);
                 await writer.WriteLineAsync("</ul></li>").ConfigureAwait(false);
@@ -128,8 +131,8 @@ namespace NuGetCalcWeb
                         {
                             Debug.WriteLine(type.FullName);
                             html = string.Format(
-                                @"<pre class=""typedesc"" id=""t{0}"">{1}</pre>",
-                                type.MetadataToken.RID.ToString("x"),
+                                @"<pre class=""typedesc"" id=""{0}"">{1}</pre>",
+                                HttpUtility.HtmlAttributeEncode(type.FullName),
                                 await HighlightCs(GenerateTypeDescription(module, type)).ConfigureAwait(false)
                             );
                         }
@@ -165,10 +168,8 @@ namespace NuGetCalcWeb
                 : type.IsDelegate() ? "delegate"
                 : "class";
             await writer.WriteLineAsync(string.Format(
-                @"<li class=""type""><a class=""link-type {2}"" href=""#t{0}"" data-rid=""{0}"">{1}</a>",
-                type.MetadataToken.RID.ToString("x"),
-                type.Name,
-                kind
+                @"<li class=""type""><a class=""link-type {0}"" href=""#{1}"">{2}</a>",
+                kind, HttpUtility.HtmlAttributeEncode(type.FullName), HttpUtility.HtmlEncode(type.Name)
             )).ConfigureAwait(false);
 
             var nested = type.NestedTypes.Where(t => t.IsPublic || t.IsNestedPublic).OrderBy(t => t.Name).ToArray();

@@ -10,13 +10,20 @@
 
     $(".link-type").on("click", function () {
         $typedesc.removeClass("active");
-        $("#t" + $(this).attr("data-rid")).addClass("active");
+        $(document.getElementById(this.hash.substr(1))).addClass("active");
     });
 
     $(".link-namespace").on("click", function () {
-        $(this).next("ul").toggle();
+        $(this).next("ul").collapse("toggle");
         return false;
     });
 
-    $(".namespace > ul").toggle();
+    var hash = location.hash;
+    if (hash) {
+        var elm = document.getElementById(hash.substr(1));
+        if (elm) {
+            $typedesc.removeClass("active");
+            $(elm).addClass("active");
+        }
+    }
 })();
