@@ -179,7 +179,8 @@ namespace NuGetCalcWeb
             var directory = Path.Combine("App_Data", "upload", result);
             if (!Directory.Exists(directory))
             {
-                var pathResolver = new PackagePathResolver(directory);
+                var tempDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+                var pathResolver = new PackagePathResolver(tempDirectory);
                 PackageIdentity identity;
 
                 try
@@ -195,6 +196,9 @@ namespace NuGetCalcWeb
                             new PackageExtractionContext() { CopySatelliteFiles = true },
                             PackageSaveModes.Nuspec, CancellationToken.None).ConfigureAwait(false);
                     }
+
+                    Directory.CreateDirectory(Path.GetDirectoryName(directory));
+                    Directory.Move(Directory.EnumerateDirectories(tempDirectory).Single(), directory);
                 }
                 catch (Exception ex)
                 {
@@ -205,8 +209,14 @@ namespace NuGetCalcWeb
                     catch (DirectoryNotFoundException) { }
                     throw new NuGetUtilityException("Couldn't extract the package.", ex);
                 }
-
-                fileInfo.MoveTo(Path.Combine(directory, pathResolver.GetPackageFileName(identity)));
+                finally
+                {
+                    try
+                    {
+                        Directory.Delete(tempDirectory, true);
+                    }
+                    catch (DirectoryNotFoundException) { }
+                }
             }
 
             return result;
@@ -214,9 +224,7 @@ namespace NuGetCalcWeb
 
         public static DirectoryInfo GetUploadedPackage(string hash)
         {
-            var dir = new DirectoryInfo(Path.Combine("App_Data", "upload", hash))
-                .EnumerateDirectories()
-                .SingleOrDefault(x => !x.Attributes.HasFlag(FileAttributes.Hidden) && !x.Name.StartsWith("."));
+            var dir = new DirectoryInfo(Path.Combine("App_Data", "upload", hash));
             if (dir == null)
                 throw new NuGetUtilityException("The package has not been uploaded.");
             return dir;

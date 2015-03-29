@@ -4,7 +4,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Owin;
-using NuGetCalcWeb.RazorSupport;
 using NuGetCalcWeb.ViewModels;
 
 namespace NuGetCalcWeb.Middlewares
@@ -49,18 +48,7 @@ namespace NuGetCalcWeb.Middlewares
 
             if (file != null && new FileInfo(file.LocalFileName).Length > 0)
             {
-                try
-                {
-                    hash = await NuGetUtility.ExtractUploadedFile(file).ConfigureAwait(false);
-                }
-                catch (NuGetUtilityException ex)
-                {
-                    context.Response.Error(500, new ErrorModel(
-                        "Error while extracting the package",
-                        detail: ex.ToString()
-                    )).Wait(); //TODO
-                    return;
-                }
+                hash = await NuGetUtility.ExtractUploadedFile(file).ConfigureAwait(false);
             }
             else if (string.IsNullOrEmpty(hash))
             {

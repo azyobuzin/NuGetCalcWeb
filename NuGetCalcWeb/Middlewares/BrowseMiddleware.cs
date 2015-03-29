@@ -64,23 +64,12 @@ namespace NuGetCalcWeb.Middlewares
                     return;
                 }
 
-                try
-                {
-                    var packageDir = await NuGetUtility.GetPackage(source, packageId, nugetVersion).ConfigureAwait(false);
-                    var s = packageDir.FullName.Split(Path.DirectorySeparatorChar);
-                    redirectTo = string.Format("repositories/{0}/{1}/",
-                        s[s.Length - 2], // repository hash
-                        s[s.Length - 1] // package name and version
-                    );
-                }
-                catch (NuGetUtilityException ex)
-                {
-                    context.Response.Error(500, new ErrorModel(
-                        "Error while downloading the package",
-                        detail: ex.ToString()
-                    )).Wait(); //TODO
-                    return;
-                }
+                var packageDir = await NuGetUtility.GetPackage(source, packageId, nugetVersion).ConfigureAwait(false);
+                var s = packageDir.FullName.Split(Path.DirectorySeparatorChar);
+                redirectTo = string.Format("repositories/{0}/{1}/",
+                    s[s.Length - 2], // repository hash
+                    s[s.Length - 1] // package name and version
+                );
             }
             else
             {

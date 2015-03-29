@@ -18,7 +18,8 @@ namespace NuGetCalcWeb.Middlewares
                 {
                     var exception = t.Exception.InnerExceptions.Count > 1
                         ? t.Exception : t.Exception.InnerException;
-                    Trace.TraceError("{0}: {1}", context.Request.Path, exception);
+                    if (!(exception is NuGetUtilityException)) // known error
+                        Trace.TraceError("{0}: {1}", context.Request.Path, exception);
                     context.Response.View("Error", new ErrorModel(
                         "Internal Server Error", detail: exception.ToString()));
                 }

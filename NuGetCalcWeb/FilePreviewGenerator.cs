@@ -253,7 +253,7 @@ namespace NuGetCalcWeb
             {
                 await writer.WriteAsync(string.Format(
                     @"<div style=""text-align:center""><img style=""max-width:100%"" src=""data:{0};base64,",
-                    (charCode == FileType.BMP ? "image/x-ms-bmp"
+                    (charCode == FileType.BMP ? "image/bmp"
                         : charCode == FileType.GIF ? "image/gif"
                         : charCode == FileType.IMGICON ? "image/vnd.microsoft.icon"
                         : charCode == FileType.JPEG ? "image/jpeg"
