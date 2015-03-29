@@ -412,15 +412,22 @@
     <Compile Include="..\lib\ILSpy\ILSpy\XmlDoc\XmlDocLoader.cs">
       <Link>lib\ILSpy\XmlDoc\XmlDocLoader.cs</Link>
     </Compile>
+    <Compile Include="Middlewares\BrowseMiddleware.cs" />
+    <Compile Include="Middlewares\CompatibilityMiddleware.cs" />
+    <Compile Include="Middlewares\IndexMiddleware.cs" />
+    <Compile Include="Middlewares\InternalServerErrorMiddleware.cs" />
+    <Compile Include="Middlewares\NotFoundMiddleware.cs" />
+    <Compile Include="Middlewares\UploadMiddleware.cs" />
     <Compile Include="MyAssemblyResolver.cs" />
     <Compile Include="NodeRunner.cs" />
-    <Compile Include="NuGetCalcWebMiddleware.cs" />
     <Compile Include="NuGetUtility.cs" />
+    <Compile Include="RequestHelper.cs" />
+    <Compile Include="ResponseHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RazorSupport\AppTemplateActivator.cs" />
     <Compile Include="RazorSupport\AppTemplateManager.cs" />
+    <Compile Include="RazorSupport\RazorHelper.cs" />
     <Compile Include="Startup.cs" />
-    <Compile Include="ResponseHelper.cs" />
     <Compile Include="FilePreviewGenerator.cs" />
     <Compile Include="ViewModels\CompatibilityModel.cs" />
     <Compile Include="ViewModels\ErrorModel.cs" />

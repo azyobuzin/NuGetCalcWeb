@@ -8,6 +8,10 @@
 
 <div class="container">
     <h1>@Model.Header</h1>
+    @if (!string.IsNullOrEmpty(Model.Message))
+    {
+        <p>@Model.Message</p>
+    }
     @if (!string.IsNullOrEmpty(Model.Detail))
     {
         <pre>@Model.Detail</pre>

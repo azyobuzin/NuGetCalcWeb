@@ -1,0 +1,87 @@
+﻿using System;
+using System.IO;
+using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
+using Microsoft.Owin;
+using NuGetCalcWeb.RazorSupport;
+using NuGetCalcWeb.ViewModels;
+
+namespace NuGetCalcWeb.Middlewares
+{
+    public class UploadMiddleware : OwinMiddleware
+    {
+        public UploadMiddleware(OwinMiddleware next) : base(next) { }
+
+        public override async Task Invoke(IOwinContext context)
+        {
+            var httpContent = new StreamContent(context.Request.Body);
+            foreach (var kvp in context.Request.Headers)
+                httpContent.Headers.TryAddWithoutValidation(kvp.Key, kvp.Value);
+
+            if (!httpContent.IsMimeMultipartContent("form-data"))
+            {
+                await context.Response.Error(415, new ErrorModel(
+                    "Unsupported Media Type",
+                     "You must upload nupkgs with multipart/form-data."
+                )).ConfigureAwait(false);
+                return;
+            }
+
+            var provider = await httpContent
+                .ReadAsMultipartAsync(new MultipartFormDataStreamProvider(Path.GetTempPath()))
+                .ConfigureAwait(false);
+            var formData = provider.FormData;
+
+            var hash = formData["hash"];
+            var method = formData["method"];
+            if (method == null)
+            {
+                await context.Response.Error(400, new ErrorModel(
+                    "Bad Request",
+                    "\"method\" parameter is required."
+                )).ConfigureAwait(false);
+                return;
+            }
+
+            var file = provider.FileData
+                .FirstOrDefault(f => f.Headers.ContentDisposition.Name.Trim('"') == "file");
+
+            if (file != null && new FileInfo(file.LocalFileName).Length > 0)
+            {
+                try
+                {
+                    hash = await NuGetUtility.ExtractUploadedFile(file).ConfigureAwait(false);
+                }
+                catch (NuGetUtilityException ex)
+                {
+                    context.Response.Error(500, new ErrorModel(
+                        "Error while extracting the package",
+                        detail: ex.ToString()
+                    )).Wait(); //TODO
+                    return;
+                }
+            }
+            else if (string.IsNullOrEmpty(hash))
+            {
+                await context.Response.Error(400, new ErrorModel(
+                    "Bad Request",
+                    "\"file\" parameter is required."
+                )).ConfigureAwait(false);
+                return;
+            }
+
+            var redirectUri = new UriBuilder(new Uri(context.Request.Uri, method));
+            redirectUri.Query = string.Join("&",
+                Enumerable.Range(0, formData.Count)
+                    .Select(i => Tuple.Create(formData.GetKey(i), formData.Get(i)))
+                    .Where(t => t.Item1 != "method" && t.Item1 != "hash" && !string.IsNullOrEmpty(t.Item2))
+                    .Concat(new[] { Tuple.Create("hash", hash) })
+                    .Select(t => string.Format("{0}={1}", Uri.EscapeDataString(t.Item1), Uri.EscapeDataString(t.Item2)))
+            );
+
+            context.Response.StatusCode = 303;
+            context.Response.Headers.Set("Location", redirectUri.ToString());
+        }
+    }
+}

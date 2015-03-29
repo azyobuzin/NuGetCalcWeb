@@ -18,9 +18,7 @@ namespace NuGetCalcWeb.ViewModels
         {
             var pathBase = this.OwinContext.Request.PathBase;
             return path.StartsWith("~/")
-                ? (pathBase.HasValue
-                    ? pathBase.ToUriComponent() + path.Substring(2)
-                    : path.Substring(1))
+                ? pathBase.ToUriComponent() + path.Substring(1)
                 : path;
         }
     }

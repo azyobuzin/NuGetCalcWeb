@@ -1,55 +1,44 @@
 ﻿using System;
-using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 using Microsoft.Owin;
-using Newtonsoft.Json;
 using NuGetCalcWeb.RazorSupport;
 using NuGetCalcWeb.ViewModels;
-using RazorEngine.Configuration;
-using RazorEngine.Templating;
 
 namespace NuGetCalcWeb
 {
     public static class ResponseHelper
     {
-        private static UTF8Encoding encoding = new UTF8Encoding(false);
+        public static readonly Encoding DefaultEncoding = new UTF8Encoding(false);
 
-        private static void View(IOwinResponse response, string viewName, Type modelType, object model)
+        private static Task View(IOwinResponse response, string viewName, Type modelType, object model)
         {
+            var context = response.Context;
+            var cancel = context.Request.CallCancelled;
+            cancel.ThrowIfCancellationRequested();
+            var body = DefaultEncoding.GetBytes(RazorHelper.Run(context, viewName, modelType, model));
+            cancel.ThrowIfCancellationRequested();
             response.ContentType = "text/html; charset=utf-8";
-            using (var service = RazorEngineService.Create(new TemplateServiceConfiguration()
-            {
-                Activator = new AppTemplateActivator(response.Context),
-                BaseTemplateType = typeof(AppTemplateBase<>),
-                TemplateManager = AppTemplateManager.Default
-            }))
-            using (var writer = new StreamWriter(response.Body, encoding))
-            {
-                if (service.IsTemplateCached(viewName, modelType))
-                    service.Run(viewName, writer, modelType, model);
-                else
-                    service.RunCompile(
-                        AppTemplateManager.ResolveView(viewName),
-                        viewName, writer, modelType, model);
-            }
+            response.ContentLength = body.LongLength;
+            return context.Request.IsHeadRequest()
+                ? Task.FromResult(true)
+                : response.WriteAsync(body, cancel);
         }
 
-        public static void View<T>(this IOwinResponse response, string viewName, T model)
+        public static Task View<T>(this IOwinResponse response, string viewName, T model)
         {
-            View(response, viewName, typeof(T), model);
+            return View(response, viewName, typeof(T), model);
         }
 
-        public static void View(this IOwinResponse response, string viewName)
+        public static Task View(this IOwinResponse response, string viewName)
         {
-            View(response, viewName, null, null);
+            return View(response, viewName, null, null);
         }
 
-        public static void Json(this IOwinResponse response, object value)
+        public static Task Error(this IOwinResponse response, int statusCode, ErrorModel errorModel)
         {
-            var bytes = encoding.GetBytes(JsonConvert.SerializeObject(value));
-            response.ContentType = "application/json; charset=utf-8";
-            response.ContentLength = bytes.LongLength;
-            response.Write(bytes);
+            response.StatusCode = statusCode;
+            return response.View("Error", errorModel);
         }
     }
 }

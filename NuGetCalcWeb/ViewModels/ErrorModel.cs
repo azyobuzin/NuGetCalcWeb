@@ -1,13 +1,16 @@
-﻿using Newtonsoft.Json;
-
-namespace NuGetCalcWeb.ViewModels
+﻿namespace NuGetCalcWeb.ViewModels
 {
     public class ErrorModel
     {
-        [JsonProperty("error")]
-        public string Header { get; set; }
+        public ErrorModel(string header, string message = null, string detail = null)
+        {
+            this.Header = header;
+            this.Message = message;
+            this.Detail = detail;
+        }
 
-        [JsonProperty("detail")]
+        public string Header { get; set; }
+        public string Message { get; set; }
         public string Detail { get; set; }
     }
 }
