@@ -22,13 +22,10 @@ namespace NuGetCalcWeb
 {
     public sealed class FilePreviewGenerator
     {
-        private const string HighlightCss = @"<link rel=""stylesheet"" href=""https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/vs.min.css"">";
-
-        public static string GetHtmlFilePath(string input)
+        public static string GetHtmlFilePath(FileInfo input)
         {
-            var splitedFileName = input.Split(Path.DirectorySeparatorChar);
-            return Path.Combine("App_Data", "html", Path.Combine(
-                splitedFileName.Skip(Array.LastIndexOf(splitedFileName, "packages") + 1).ToArray()));
+            return Path.Combine("App_Data", "html",
+                input.FullName.Substring(Path.GetFullPath(Path.Combine("App_Data", "packages")).Length + 1));
         }
 
         private static ConcurrentDictionary<string, Task> tasks = new ConcurrentDictionary<string, Task>(StringComparer.OrdinalIgnoreCase);
@@ -36,7 +33,7 @@ namespace NuGetCalcWeb
         public FilePreviewGenerator(FileInfo input)
         {
             this.input = input;
-            this.htmlFile = new FileInfo(GetHtmlFilePath(input.FullName));
+            this.htmlFile = new FileInfo(GetHtmlFilePath(input));
         }
 
         private readonly FileInfo input;
@@ -222,7 +219,7 @@ namespace NuGetCalcWeb
         {
             model.Header = this.header;
             var viewBag = new DynamicViewBag();
-            viewBag.SetValue("Title", this.header.Breadcrumbs[this.header.Breadcrumbs.Length - 1]); //TODO: アップロードでおかしくなりそう
+            viewBag.SetValue("Title", this.header.Breadcrumbs[this.header.Breadcrumbs.Length - 1]);
             viewBag.SetValue("NoIndex", true);
             using (var writer = new StreamWriter(this.htmlFile.FullName, false, ResponseHelper.DefaultEncoding))
                 RazorHelper.Run(this.owinContext, writer, "FilePreview/" + viewName, model, viewBag);
