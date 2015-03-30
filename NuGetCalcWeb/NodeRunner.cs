@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace NuGetCalcWeb
@@ -15,7 +16,9 @@ namespace NuGetCalcWeb
                 WorkingDirectory = Environment.CurrentDirectory,
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true,
-                RedirectStandardError = true
+                RedirectStandardError = true,
+                StandardOutputEncoding = ResponseHelper.DefaultEncoding,
+                StandardErrorEncoding = ResponseHelper.DefaultEncoding
             }))
             {
                 p.EnableRaisingEvents = true;
@@ -26,7 +29,11 @@ namespace NuGetCalcWeb
                 var stderr = p.StandardError.ReadToEndAsync();
 
                 using (var stdin = p.StandardInput)
-                    await stdin.WriteAsync(code).ConfigureAwait(false);
+                {
+                    var writer = new StreamWriter(stdin.BaseStream, ResponseHelper.DefaultEncoding);
+                    await writer.WriteAsync(code).ConfigureAwait(false);
+                    await writer.FlushAsync().ConfigureAwait(false);
+                }
 
                 if (await processWaitTask.Task.ConfigureAwait(false))
                     return await stdout.ConfigureAwait(false);
