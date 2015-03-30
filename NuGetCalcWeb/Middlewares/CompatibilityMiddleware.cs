@@ -60,8 +60,8 @@ namespace NuGetCalcWeb.Middlewares
                         goto RESPOND;
                     }
 
-                    package = new PackageFolderReader(
-                        await NuGetUtility.GetPackage(source, packageId, nugetVersion).ConfigureAwait(false));
+                    var packageDir = NuGetUtility.GetPackage(source, packageId, nugetVersion).Result; // avoid compile error on mono
+                    package = new PackageFolderReader(packageDir);
                 }
                 else
                 {
