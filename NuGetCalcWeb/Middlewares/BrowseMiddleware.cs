@@ -1,18 +1,57 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Owin;
+using Microsoft.Owin.Builder;
+using Microsoft.Owin.FileSystems;
+using Microsoft.Owin.StaticFiles;
+using Microsoft.Owin.StaticFiles.ContentTypes;
 using NuGet.Packaging;
 using NuGet.Versioning;
 using NuGetCalcWeb.ViewModels;
+using NuGetCalcWeb.ViewModels.FilePreview;
+using Owin;
 
 namespace NuGetCalcWeb.Middlewares
 {
+    using AppFunc = Func<IDictionary<string, object>, Task>;
+
     public class BrowseMiddleware : OwinMiddleware
     {
-        public BrowseMiddleware(OwinMiddleware next) : base(next) { }
+        public BrowseMiddleware(OwinMiddleware next, IAppBuilder app)
+            : base(next)
+        {
+            var downloadDir = Path.Combine("App_Data", "packages");
+            Directory.CreateDirectory(downloadDir); // Prevent error from FileSystem
+            this.downloadApp = app.New()
+                .UseStaticFiles(new StaticFileOptions()
+                {
+                    RequestPath = new PathString("/browse"),
+                    FileSystem = new PhysicalFileSystem(downloadDir),
+                    ServeUnknownFileTypes = true
+                })
+                .Use<NotFoundMiddleware>()
+                .Build();
+
+            var filePreviewDir = Path.Combine("App_Data", "html");
+            Directory.CreateDirectory(filePreviewDir);
+            this.filePreviewApp = app.New()
+                .UseStaticFiles(new StaticFileOptions()
+                {
+                    RequestPath = new PathString("/browse"),
+                    FileSystem = new PhysicalFileSystem(filePreviewDir),
+                    ContentTypeProvider = new FileExtensionContentTypeProvider(new Dictionary<string, string>()),
+                    ServeUnknownFileTypes = true,
+                    DefaultContentType = "text/html"
+                })
+                .Build();
+        }
+
+        private AppFunc downloadApp;
+        private AppFunc filePreviewApp;
 
         public override Task Invoke(IOwinContext context)
         {
@@ -20,6 +59,9 @@ namespace NuGetCalcWeb.Middlewares
 
             if (path == "/browse")
                 return Browse(context);
+
+            if (context.Request.Query["dl"] == "true")
+                return this.downloadApp(context.Environment);
 
             var m = Regex.Match(path, @"^/browse/repositories/([a-zA-Z0-9\+\-]+)/([^/]+)/(.*)$");
             if (m.Success)
@@ -86,7 +128,7 @@ namespace NuGetCalcWeb.Middlewares
         private Task BrowseRepositories(IOwinContext context, string hash, string packageName, string path)
         {
             return this.BrowseImpl(context,
-                new DirectoryInfo(Path.Combine("App_Data", "repositories", hash, packageName)), path);
+                new DirectoryInfo(Path.Combine("App_Data", "packages", "repositories", hash, packageName)), path);
         }
 
         private Task BrowseUpload(IOwinContext context, string hash, string path)
@@ -125,22 +167,17 @@ namespace NuGetCalcWeb.Middlewares
                     if (!file.Exists)
                         goto NOT_FOUND;
 
-                    if (context.Request.Query["dl"] == "true")
+                    var gen = new FilePreviewGenerator(file);
+                    if (gen.NeedsGenerate)
                     {
-                        //TODO: cache, Content-Range
-                        context.Response.ContentType = "application/octet-stream";
-                        context.Response.ContentLength = file.Length;
-                        await context.Response.SendFileAsync(file.FullName).ConfigureAwait(false);
-                    }
-                    else
-                    {
-                        await context.Response.View("FilePreview", new FilePreviewModel()
+                        await gen.GenerateHtml(context, new HeaderModel()
                         {
                             Identity = package.GetIdentity(),
-                            Breadcrumbs = s,
-                            Content = await FilePreviewGenerator.GenerateHtml(file).ConfigureAwait(false)
+                            Breadcrumbs = s
                         }).ConfigureAwait(false);
                     }
+
+                    await this.filePreviewApp(context.Environment).ConfigureAwait(false);
                 }
             }
 

@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Text;
+using System.IO;
 using Microsoft.Owin;
 using NuGetCalcWeb.ViewModels;
 using RazorEngine.Configuration;
@@ -9,7 +9,7 @@ namespace NuGetCalcWeb.RazorSupport
 {
     public static class RazorHelper
     {
-        public static string Run(IOwinContext owinContext, string viewName, Type modelType = null, object model = null)
+        public static void Run(IOwinContext owinContext, TextWriter writer, string viewName, Type modelType, object model, DynamicViewBag viewBag)
         {
             using (var service = RazorEngineService.Create(new TemplateServiceConfiguration()
             {
@@ -18,12 +18,21 @@ namespace NuGetCalcWeb.RazorSupport
                 TemplateManager = AppTemplateManager.Default
             }))
             {
-                return service.IsTemplateCached(viewName, modelType)
-                    ? service.Run(viewName, modelType, model)
-                    : service.RunCompile(
-                        AppTemplateManager.ResolveView(viewName),
-                        viewName, modelType, model);
+                if (service.IsTemplateCached(viewName, modelType))
+                    service.Run(viewName, writer, modelType, model, viewBag);
+                else
+                    service.RunCompile(AppTemplateManager.ResolveView(viewName), viewName, writer, modelType, model, viewBag);
             }
+        }
+
+        public static void Run<T>(IOwinContext owinContext, TextWriter writer, string viewName, T model, DynamicViewBag viewBag = null)
+        {
+            Run(owinContext, writer, viewName, typeof(T), model, viewBag);
+        }
+
+        public static void Run(IOwinContext owinContext, TextWriter writer, string viewName, DynamicViewBag viewBag = null)
+        {
+            Run(owinContext, writer, viewName, null, null, null);
         }
     }
 }

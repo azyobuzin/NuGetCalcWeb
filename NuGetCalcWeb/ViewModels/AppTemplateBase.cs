@@ -21,6 +21,11 @@ namespace NuGetCalcWeb.ViewModels
                 ? pathBase.ToUriComponent() + path.Substring(1)
                 : path;
         }
+
+        public TemplateWriter Include<TModel>(string name, TModel model)
+        {
+            return this.Include(name, model, typeof(TModel));
+        }
     }
 
     public static class TemplateExtensions

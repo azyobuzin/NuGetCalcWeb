@@ -1,0 +1,16 @@
+﻿@using NuGetCalcWeb.ViewModels
+@using NuGetCalcWeb.ViewModels.FilePreview
+@inherits AppTemplateBase<TypeModel>
+
+<li class="type">
+    <a class="link-type @Model.HtmlClass" href="#@Model.FullName">@Model.Name</a>
+    @if (Model.NestedTypes.Length > 0)
+    {
+        <ul>
+            @foreach (var t in Model.NestedTypes)
+            {
+                @Include("FilePreview/_Type", t)
+            }
+        </ul>
+    }
+</li>

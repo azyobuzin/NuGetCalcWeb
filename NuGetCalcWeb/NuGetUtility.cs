@@ -70,7 +70,7 @@ namespace NuGetCalcWeb
 
             var identity = new PackageIdentity(packageId, version);
             var pathResolver = new PackagePathResolver(
-                Path.Combine("App_Data", "repositories", SourceToDirectoryName(source)));
+                Path.Combine("App_Data", "packages", "repositories", SourceToDirectoryName(source)));
             var directory = new DirectoryInfo(pathResolver.GetInstallPath(identity));
 
             if (!directory.Exists)
@@ -176,7 +176,7 @@ namespace NuGetCalcWeb
                 result = bytes.Base64();
             }
 
-            var directory = Path.Combine("App_Data", "upload", result);
+            var directory = Path.Combine("App_Data", "packages", "upload", result);
             if (!Directory.Exists(directory))
             {
                 var tempDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
@@ -224,7 +224,7 @@ namespace NuGetCalcWeb
 
         public static DirectoryInfo GetUploadedPackage(string hash)
         {
-            var dir = new DirectoryInfo(Path.Combine("App_Data", "upload", hash));
+            var dir = new DirectoryInfo(Path.Combine("App_Data", "packages", "upload", hash));
             if (dir == null)
                 throw new NuGetUtilityException("The package has not been uploaded.");
             return dir;

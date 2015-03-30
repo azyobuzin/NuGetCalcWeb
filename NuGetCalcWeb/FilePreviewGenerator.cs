@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
@@ -13,57 +12,73 @@ using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.Ast;
 using ICSharpCode.ILSpy.XmlDoc;
 using ICSharpCode.NRefactory.CSharp;
+using Microsoft.Owin;
 using Mono.Cecil;
+using NuGetCalcWeb.RazorSupport;
+using NuGetCalcWeb.ViewModels.FilePreview;
+using RazorEngine.Templating;
 
 namespace NuGetCalcWeb
 {
-    public static class FilePreviewGenerator
+    public sealed class FilePreviewGenerator
     {
         private const string HighlightCss = @"<link rel=""stylesheet"" href=""https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/vs.min.css"">";
 
-        private static ConcurrentDictionary<string, Task<string>> tasks = new ConcurrentDictionary<string, Task<string>>(StringComparer.OrdinalIgnoreCase);
-
-        public static async Task<string> GenerateHtml(FileInfo input)
+        public static string GetHtmlFilePath(string input)
         {
-            var fullName = input.FullName;
-            var splitedFileName = fullName.Split(Path.DirectorySeparatorChar);
-            var htmlFile = new FileInfo(Path.Combine("App_Data", "html", Path.Combine(
-                splitedFileName.Skip(Array.LastIndexOf(splitedFileName, "App_Data") + 1).ToArray())));
-            if (htmlFile.Exists)
+            var splitedFileName = input.Split(Path.DirectorySeparatorChar);
+            return Path.Combine("App_Data", "html", Path.Combine(
+                splitedFileName.Skip(Array.LastIndexOf(splitedFileName, "packages") + 1).ToArray()));
+        }
+
+        private static ConcurrentDictionary<string, Task> tasks = new ConcurrentDictionary<string, Task>(StringComparer.OrdinalIgnoreCase);
+
+        public FilePreviewGenerator(FileInfo input)
+        {
+            this.input = input;
+            this.htmlFile = new FileInfo(GetHtmlFilePath(input.FullName));
+        }
+
+        private readonly FileInfo input;
+        private FileInfo htmlFile;
+        private IOwinContext owinContext;
+        private HeaderModel header;
+
+        public bool NeedsGenerate
+        {
+            get
             {
-                using (var sr = new StreamReader(htmlFile.FullName))
-                    return await sr.ReadToEndAsync().ConfigureAwait(false);
+                return tasks.ContainsKey(this.input.FullName) || !this.htmlFile.Exists;
             }
+        }
+
+        public async Task GenerateHtml(IOwinContext owinContext, HeaderModel header)
+        {
+            this.owinContext = owinContext;
+            this.header = header;
+            var fullName = this.input.FullName;
 
             try
             {
-                return await tasks.GetOrAdd(fullName, _ => Task.Run(async () =>
+                await tasks.GetOrAdd(fullName, _ => Task.Run(async () =>
                 {
-                    Debug.WriteLine("Generating " + input.Name);
-                    Directory.CreateDirectory(htmlFile.DirectoryName);
+                    if (this.htmlFile.Exists) return;
+
+                    Debug.WriteLine("Generating " + this.input.Name);
+                    Directory.CreateDirectory(this.htmlFile.DirectoryName);
                     try
                     {
-                        using (var stream = new FileStream(htmlFile.FullName, FileMode.Create, FileAccess.ReadWrite))
-                        {
-                            using (var sw = new StreamWriter(stream, Encoding.UTF8, 1024, true))
-                            {
-                                var ext = input.Extension;
-                                await (ext == ".dll" || ext == ".exe"
-                                    ? GenerateFromAssemblyFile(input, sw)
-                                    : GenerateFromFile(input, sw)
-                                ).ConfigureAwait(false);
-                            }
-
-                            stream.Position = 0;
-                            using (var sr = new StreamReader(stream))
-                                return await sr.ReadToEndAsync().ConfigureAwait(false);
-                        }
+                        var ext = this.input.Extension;
+                        await (ext == ".dll" || ext == ".exe"
+                            ? this.GenerateFromAssemblyFile()
+                            : this.GenerateFromFile()
+                        ).ConfigureAwait(false);
                     }
                     catch
                     {
                         try
                         {
-                            htmlFile.Delete();
+                            this.htmlFile.Delete();
                         }
                         catch { }
                         throw;
@@ -72,17 +87,17 @@ namespace NuGetCalcWeb
             }
             finally
             {
-                Task<string> tmp;
+                Task tmp;
                 tasks.TryRemove(fullName, out tmp);
             }
         }
 
-        private static async Task GenerateFromAssemblyFile(FileInfo input, StreamWriter writer)
+        private async Task GenerateFromAssemblyFile()
         {
             ModuleDefinition module = null;
             try
             {
-                module = ModuleDefinition.ReadModule(input.FullName, new ReaderParameters()
+                module = ModuleDefinition.ReadModule(this.input.FullName, new ReaderParameters()
                 {
                     ReadingMode = ReadingMode.Immediate,
                     AssemblyResolver = new MyAssemblyResolver()
@@ -91,34 +106,31 @@ namespace NuGetCalcWeb
             catch (BadImageFormatException) { }
 
             if (module == null)
-                await GenerateFromFile(input, writer).ConfigureAwait(false);
-
-            await writer.WriteLineAsync(string.Format(HighlightCss +
-                @"<div class=""row""><div id=""type-list"" class=""col-lg-3 col-sm-4""><a id=""link-asm"" href=""#asm"">{0}</a><ul>",
-                HttpUtility.HtmlEncode(module.Assembly.Name.Name)
-            )).ConfigureAwait(false);
-
-            var types = new List<TypeDefinition>();
-            foreach (var g in module.Types.Where(t => t.IsPublic).GroupBy(t => t.Namespace).OrderBy(g => g.Key))
             {
-                await writer.WriteLineAsync(string.Format(
-                    @"<li class=""namespace""><a class=""link-namespace"" href=""#"">{0}</a><ul class=""collapse"">",
-                    HttpUtility.HtmlEncode(g.Key)
-                )).ConfigureAwait(false);
-                foreach (var t in g.OrderBy(t => t.Name))
-                    await WriteClass(t, writer, types).ConfigureAwait(false);
-                await writer.WriteLineAsync("</ul></li>").ConfigureAwait(false);
+                await this.GenerateFromFile().ConfigureAwait(false);
+                return;
             }
 
-            await writer.WriteLineAsync(string.Format(
-                @"</ul></div><div id=""typedesc-container"" class=""col-lg-9 col-sm-8""><pre id=""asm"" class=""typedesc active"">{0}</pre>",
-                await HighlightCs(GenerateAssemblyDescription(module)).ConfigureAwait(false)
-            )).ConfigureAwait(false);
+            var model = new AssemblyModel()
+            {
+                AssemblyName = module.Assembly.Name.Name,
+                AssemblyDescription = await HighlightCs(GenerateAssemblyDescription(module)).ConfigureAwait(false)
+            };
 
-            var tasks = new Task[types.Count];
+            var types = new List<TypeDefinition>();
+            model.Namespaces = module.Types
+                .Where(t => t.IsPublic)
+                .GroupBy(t => t.Namespace)
+                .OrderBy(g => g.Key)
+                .Select(g => new NamespaceModel()
+                {
+                    Name = g.Key,
+                    Types = g.OrderBy(t => t.Name).Select(t => CreateTypeModel(t, types)).ToArray()
+                })
+                .ToArray();
 
+            var tasks = new Task<TypeDescription>[types.Count];
             using (var genSemaphore = new SemaphoreSlim(4))
-            using (var writeSemaphore = new SemaphoreSlim(1))
             {
                 for (var i = 0; i < types.Count; i++)
                 {
@@ -126,64 +138,46 @@ namespace NuGetCalcWeb
                     tasks[i] = Task.Run(async () =>
                     {
                         await genSemaphore.WaitAsync().ConfigureAwait(false);
-                        string html;
                         try
                         {
                             Debug.WriteLine(type.FullName);
-                            html = string.Format(
-                                @"<pre class=""typedesc"" id=""{0}"">{1}</pre>",
-                                HttpUtility.HtmlAttributeEncode(type.FullName),
-                                await HighlightCs(GenerateTypeDescription(module, type)).ConfigureAwait(false)
-                            );
+                            return new TypeDescription()
+                            {
+                                FullName = type.FullName,
+                                Code = await HighlightCs(GenerateTypeDescription(module, type)).ConfigureAwait(false)
+                            };
                         }
                         finally
                         {
                             genSemaphore.Release();
                         }
-
-                        await writeSemaphore.WaitAsync().ConfigureAwait(false);
-                        try
-                        {
-                            await writer.WriteLineAsync(html).ConfigureAwait(false);
-                        }
-                        finally
-                        {
-                            writeSemaphore.Release();
-                        }
                     });
                 }
 
-                await Task.WhenAll(tasks).ConfigureAwait(false);
+                model.TypeDescriptions = await Task.WhenAll(tasks).ConfigureAwait(false);
             }
 
-            await writer.WriteLineAsync(@"</div></div><script src=""/content/asmbrowser.js""></script>").ConfigureAwait(false);
+            this.RunTemplate("Assembly", model);
         }
 
-        private static async Task WriteClass(TypeDefinition type, StreamWriter writer, List<TypeDefinition> types)
+        private static TypeModel CreateTypeModel(TypeDefinition type, List<TypeDefinition> types)
         {
             types.Add(type);
-            var kind = type.IsEnum ? "enum"
-                : type.IsValueType ? "struct"
-                : type.IsInterface ? "interface"
-                : type.IsDelegate() ? "delegate"
-                : "class";
-            await writer.WriteLineAsync(string.Format(
-                @"<li class=""type""><a class=""link-type {0}"" href=""#{1}"">{2}</a>",
-                kind, HttpUtility.HtmlAttributeEncode(type.FullName), HttpUtility.HtmlEncode(type.Name)
-            )).ConfigureAwait(false);
-
-            var nested = type.NestedTypes.Where(t => t.IsPublic || t.IsNestedPublic).OrderBy(t => t.Name).ToArray();
-            if (nested.Length > 0)
+            return new TypeModel()
             {
-                await writer.WriteLineAsync("<ul>").ConfigureAwait(false);
-                foreach (var t in nested)
-                {
-                    await WriteClass(t, writer, types).ConfigureAwait(false);
-                }
-                await writer.WriteLineAsync("</ul>").ConfigureAwait(false);
-            }
-
-            await writer.WriteLineAsync("</li>").ConfigureAwait(false);
+                Name = type.Name,
+                FullName = type.FullName,
+                HtmlClass = type.IsEnum ? "enum"
+                    : type.IsValueType ? "struct"
+                    : type.IsInterface ? "interface"
+                    : type.IsDelegate() ? "delegate"
+                    : "class",
+                NestedTypes = type.NestedTypes
+                    .Where(t => t.IsPublic || t.IsNestedPublic)
+                    .OrderBy(t => t.Name)
+                    .Select(t => CreateTypeModel(t, types))
+                    .ToArray()
+            };
         }
 
         private static string GenerateAssemblyDescription(ModuleDefinition module)
@@ -224,62 +218,53 @@ namespace NuGetCalcWeb
             return output.ToString();
         }
 
-        private static async Task GenerateFromFile(FileInfo input, StreamWriter writer)
+        private void RunTemplate<T>(string viewName, T model) where T : FilePreviewModel
+        {
+            model.Header = this.header;
+            var viewBag = new DynamicViewBag();
+            viewBag.SetValue("Title", this.header.Breadcrumbs[this.header.Breadcrumbs.Length - 1]); //TODO: アップロードでおかしくなりそう
+            viewBag.SetValue("NoIndex", true);
+            using (var writer = new StreamWriter(this.htmlFile.FullName, false, ResponseHelper.DefaultEncoding))
+                RazorHelper.Run(this.owinContext, writer, "FilePreview/" + viewName, model, viewBag);
+        }
+
+        private async Task GenerateFromFile()
         {
             CharCode charCode;
             string text;
-            using (var r = new FileReader(input))
+            using (var r = new FileReader(this.input))
             {
-                charCode = r.Read(input);
+                charCode = r.Read(this.input);
                 text = r.Text;
             }
 
             if (charCode == FileType.READERROR)
-                throw new Exception("READERROR: " + input.FullName);
+                throw new Exception("READERROR: " + this.input.FullName);
             if (charCode == FileType.HUGEFILE)
-                throw new NotImplementedException(); // unreachable
+                throw new Exception("HUGEFILE: " + this.input.FullName); // unreachable
 
             if (text != null)
             {
-                await writer.WriteAsync(HighlightCss + "<pre>").ConfigureAwait(false);
-                await writer.WriteAsync(await HighlightAuto(text).ConfigureAwait(false)).ConfigureAwait(false);
-                await writer.WriteLineAsync("</pre>").ConfigureAwait(false);
+                this.RunTemplate("TextFile", new ContentModel(
+                    this.input.Extension.ToLowerInvariant() == ".txt"
+                        ? HttpUtility.HtmlEncode(text)
+                        : await HighlightAuto(text).ConfigureAwait(false)
+                ));
             }
             else if (charCode == FileType.EMPTYFILE)
             {
-                await writer.WriteLineAsync(@"<p class=""alert alert-warning"">This is an empty file.</p>").ConfigureAwait(false);
+                this.RunTemplate("Alert", new ContentModel("This is an empty file."));
             }
             else if (charCode is FileType.Image)
             {
-                await writer.WriteAsync(string.Format(
-                    @"<div style=""text-align:center""><img style=""max-width:100%"" src=""data:{0};base64,",
-                    (charCode == FileType.BMP ? "image/bmp"
-                        : charCode == FileType.GIF ? "image/gif"
-                        : charCode == FileType.IMGICON ? "image/vnd.microsoft.icon"
-                        : charCode == FileType.JPEG ? "image/jpeg"
-                        : charCode == FileType.PNG ? "image/png"
-                        : charCode == FileType.TIFF ? "image/tiff"
-                        : "application/octet-stream")
-                )).ConfigureAwait(false);
-
-                using (var stream = input.OpenRead())
+                this.RunTemplate("ImageFile", new ContentModel(new UriBuilder(this.owinContext.Request.Uri)
                 {
-                    const int bufSize = 15 * 1024; // multiples of 3
-                    var buf = new byte[bufSize];
-                    int count;
-                    while (true)
-                    {
-                        count = await stream.ReadAsync(buf, 0, bufSize).ConfigureAwait(false);
-                        if (count == 0) break;
-                        await writer.WriteAsync(Convert.ToBase64String(buf, 0, count)).ConfigureAwait(false);
-                    }
-                }
-
-                await writer.WriteLineAsync(@""" /></div>").ConfigureAwait(false);
+                    Query = "dl=true"
+                }.Uri.AbsoluteUri));
             }
             else
             {
-                await writer.WriteLineAsync(@"<p class=""alert alert-warning"">This is a binary file.</p>").ConfigureAwait(false);
+                this.RunTemplate("Alert", new ContentModel("This is a binary file."));
             }
         }
 

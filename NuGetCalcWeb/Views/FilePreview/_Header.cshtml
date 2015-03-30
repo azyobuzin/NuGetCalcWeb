@@ -1,12 +1,8 @@
 ﻿@using NuGetCalcWeb.ViewModels
-@inherits AppTemplateBase<FilePreviewModel>
-@{
-    Layout = "_Layout";
-    ViewBag.Title = Model.Breadcrumbs[Model.Breadcrumbs.Length - 1];
-    ViewBag.NoIndex = true;
-}
+@using NuGetCalcWeb.ViewModels.FilePreview
+@inherits AppTemplateBase<HeaderModel>
 
-<div class="container-fluid">
+<div class="container">
     <ol class="breadcrumb">
         <li><a href="@(Model.Breadcrumbs.Length == 1 ? "./" : "../".Times(Model.Breadcrumbs.Length - 1))">@Model.Identity</a></li>
         @for (int i = 0, j = Model.Breadcrumbs.Length - 2; i < Model.Breadcrumbs.Length - 1; i++, j--)
@@ -17,8 +13,5 @@
         }
         <li>@Model.Breadcrumbs[Model.Breadcrumbs.Length - 1]</li>
     </ol>
-
-    @ExternalSnippets.Default.AdTop
-
-    @Raw(Model.Content)
 </div>
+@ExternalSnippets.Default.AdTop

@@ -24,7 +24,7 @@ namespace NuGetCalcWeb
                 )
                 .MapWhen(
                     ctx => ctx.Request.Path.StartsWithSegments(new PathString("/browse")),
-                    b => b.Use<BrowseMiddleware>().Use<NotFoundMiddleware>()
+                    b => b.Use<BrowseMiddleware>(b.New()).Use<NotFoundMiddleware>()
                 )
                 .MapWhen(
                     ctx => ctx.Request.Path.Value == "/upload",

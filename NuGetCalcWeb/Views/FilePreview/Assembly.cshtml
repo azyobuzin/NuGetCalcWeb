@@ -1,0 +1,43 @@
+﻿@using NuGetCalcWeb.ViewModels
+@using NuGetCalcWeb.ViewModels.FilePreview
+@inherits AppTemplateBase<AssemblyModel>
+@{
+    Layout = "_Layout";
+}
+
+@Include("FilePreview/_Header", Model.Header)
+
+<div class="container-fluid">
+    <div class="row">
+        <div id="type-list" class="col-lg-3 col-sm-4">
+            <a id="link-asm" href="#asm">@Model.AssemblyName</a>
+            <ul>
+                @foreach (var ns in Model.Namespaces)
+                {
+                    <li class="namespace">
+                        <a class="link-namespace" href="#">@ns.Name</a>
+                        <ul class="collapse">
+                            @foreach (var t in ns.Types)
+                            {
+                                @Include("FilePreview/_Type", t)
+                            }
+                        </ul>
+                    </li>
+                }
+            </ul>
+        </div>
+        <div id="typedesc-container" class="col-lg-9 col-sm-8">
+            <pre id="asm" class="typedesc active">@Raw(Model.AssemblyDescription)</pre>
+            @foreach (var t in Model.TypeDescriptions)
+            {
+                <pre class="typedesc" id="@t.FullName">@Raw(t.Code)</pre>
+            }
+        </div>
+    </div>
+</div>
+<script src="~/content/asmbrowser.js"></script>
+
+@section Header
+{
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/vs.min.css" />
+}

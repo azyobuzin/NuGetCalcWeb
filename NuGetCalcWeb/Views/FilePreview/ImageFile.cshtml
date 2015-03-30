@@ -1,0 +1,12 @@
+﻿@using NuGetCalcWeb.ViewModels
+@using NuGetCalcWeb.ViewModels.FilePreview
+@inherits AppTemplateBase<ContentModel>
+@{
+    Layout = "_Layout";
+}
+
+@Include("FilePreview/_Header", Model.Header)
+
+<div class="container-fluid" style="text-align: center">
+    <img style="max-width: 100%" src="@Model.Content" />
+</div>

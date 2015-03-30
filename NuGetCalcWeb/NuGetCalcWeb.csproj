@@ -172,9 +172,14 @@
     <Content Include="Views\_PackageSelector.cshtml" />
     <Content Include="Views\Compatibility.cshtml" />
     <Content Include="Views\FileList.cshtml" />
-    <Content Include="Views\FilePreview.cshtml" />
+    <Content Include="Views\FilePreview\_Header.cshtml" />
     <Content Include="Views\_Layout.cshtml" />
     <Content Include="Views\Index.cshtml" />
+    <Content Include="Views\FilePreview\TextFile.cshtml" />
+    <Content Include="Views\FilePreview\Alert.cshtml" />
+    <Content Include="Views\FilePreview\ImageFile.cshtml" />
+    <Content Include="Views\FilePreview\_Type.cshtml" />
+    <Content Include="Views\FilePreview\Assembly.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -434,7 +439,10 @@
     <Compile Include="ViewModels\ExternalSnippets.cs" />
     <Compile Include="ViewModels\AppTemplateBase.cs" />
     <Compile Include="ViewModels\FileListModel.cs" />
-    <Compile Include="ViewModels\FilePreviewModel.cs" />
+    <Compile Include="ViewModels\FilePreview\AssemblyModel.cs" />
+    <Compile Include="ViewModels\FilePreview\FilePreviewModel.cs" />
+    <Compile Include="ViewModels\FilePreview\HeaderModel.cs" />
+    <Compile Include="ViewModels\FilePreview\ContentModel.cs" />
     <Compile Include="ViewModels\PackageSelectorModel.cs" />
   </ItemGroup>
   <ItemGroup>

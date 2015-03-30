@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Microsoft.Owin;
@@ -13,15 +14,22 @@ namespace NuGetCalcWeb.Middlewares
         private static byte[] body;
         private static string etag;
 
-        public override Task Invoke(IOwinContext context)
+        public override async Task Invoke(IOwinContext context)
         {
             if (body == null)
             {
-                body = ResponseHelper.DefaultEncoding.GetBytes(RazorHelper.Run(context, "Index"));
-                using(var md5 = MD5.Create())
+                using (var stream = new MemoryStream())
+                using (var writer = new StreamWriter(stream, ResponseHelper.DefaultEncoding))
                 {
-                    var b = md5.ComputeHash(body);
-                    etag = string.Concat(b.Select(x => x.ToString("x2")));
+                    RazorHelper.Run(context, writer, "Index");
+                    await writer.FlushAsync().ConfigureAwait(false);
+                    body = stream.ToArray();
+                    stream.Position = 0;
+                    using (var md5 = MD5.Create())
+                    {
+                        var b = md5.ComputeHash(stream);
+                        etag = string.Concat(b.Select(x => x.ToString("x2")));
+                    }
                 }
                 context.Request.CallCancelled.ThrowIfCancellationRequested();
             }
@@ -30,7 +38,7 @@ namespace NuGetCalcWeb.Middlewares
             res.ETag = string.Format("\"{0}\"", etag);
 
             var ifNoneMatch = context.Request.Headers.GetCommaSeparatedValues("If-None-Match");
-            if (ifNoneMatch != null && ifNoneMatch.Any(x =>x == "*"|| x == etag))
+            if (ifNoneMatch != null && ifNoneMatch.Any(x => x == "*" || x == etag))
             {
                 res.StatusCode = 304;
             }
@@ -39,9 +47,8 @@ namespace NuGetCalcWeb.Middlewares
                 res.ContentType = "text/html; charset=utf-8";
                 res.ContentLength = body.LongLength;
                 if (!context.Request.IsHeadRequest())
-                    return res.WriteAsync(body);
+                    await res.WriteAsync(body).ConfigureAwait(false);
             }
-            return Task.FromResult(true);
         }
     }
 }
