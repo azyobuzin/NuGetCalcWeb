@@ -196,7 +196,7 @@ namespace NuGetCalcWeb
             var astBuilder = new AstBuilder(context) { DecompileMethodBodies = false };
             astBuilder.AddType(type);
 
-            if (!(type.IsEnum || type.IsDelegate()))
+            if (!(type.IsEnum || type.IsInterface || type.IsDelegate()))
             {
                 var typeNode = astBuilder.SyntaxTree.GetTypes(false).First();
 
