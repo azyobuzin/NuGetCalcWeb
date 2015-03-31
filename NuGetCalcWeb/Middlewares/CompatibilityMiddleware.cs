@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Microsoft.Owin;
 using NuGet.Frameworks;
 using NuGet.Packaging;
@@ -86,6 +87,8 @@ namespace NuGetCalcWeb.Middlewares
                     if (depenencyItems != null)
                         model.Dependencies = depenencyItems.Packages;
                 }
+
+                GC.Collect(); // to release a handle of nuspec file
             }
             catch (NuGetUtilityException ex)
             {

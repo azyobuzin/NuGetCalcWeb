@@ -181,6 +181,7 @@ namespace NuGetCalcWeb.Middlewares
                 }
             }
 
+            GC.Collect(); // to release a handle of nuspec file
             return;
 
         NOT_FOUND:

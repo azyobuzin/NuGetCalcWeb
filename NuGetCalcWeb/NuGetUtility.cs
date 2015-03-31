@@ -179,7 +179,7 @@ namespace NuGetCalcWeb
             var directory = Path.Combine("App_Data", "packages", "upload", result);
             if (!Directory.Exists(directory))
             {
-                var tempDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+                var tempDirectory = Path.Combine("App_Data", "temp", Path.GetRandomFileName());
                 var pathResolver = new PackagePathResolver(tempDirectory);
                 PackageIdentity identity;
 
