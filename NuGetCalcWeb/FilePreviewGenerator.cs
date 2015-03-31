@@ -254,10 +254,8 @@ namespace NuGetCalcWeb
             }
             else if (charCode is FileType.Image)
             {
-                this.RunTemplate("ImageFile", new ContentModel(new UriBuilder(this.owinContext.Request.Uri)
-                {
-                    Query = "dl=true"
-                }.Uri.AbsoluteUri));
+                this.RunTemplate("ImageFile", new ContentModel(
+                    Uri.EscapeUriString(this.input.Name) + "?dl=true"));
             }
             else
             {

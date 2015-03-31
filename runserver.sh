@@ -13,6 +13,7 @@ if [ $? -ne 0 ]; then
 fi
 
 NEW_ID=`docker run -dtP \
+    -e NUGETCALC_BASEURI=http://nugetcalc.azyobuzi.net/ \
     -e NUGETCALC_ANALYTICS=http://junk.azyobuzi.net/nugetcalcweb/analytics.html \
     -e NUGETCALC_AD=http://junk.azyobuzi.net/nugetcalcweb/ad.html \
     -v /var/NuGetCalcAppData:/NuGetCalcWeb/NuGetCalcWeb/App_Data \

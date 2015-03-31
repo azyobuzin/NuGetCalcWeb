@@ -13,7 +13,6 @@ namespace NuGetCalcWeb
         public void Configuration(IAppBuilder app)
         {
             app.Use<InternalServerErrorMiddleware>()
-                .UseSendFileFallback()
                 .MapWhen(
                     ctx => ctx.Request.Path.Value == "/",
                     b => b.Use<IndexMiddleware>()

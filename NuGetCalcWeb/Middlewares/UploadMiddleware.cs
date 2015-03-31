@@ -59,7 +59,11 @@ namespace NuGetCalcWeb.Middlewares
                 return;
             }
 
-            var redirectUri = new UriBuilder(new Uri(context.Request.Uri, method));
+            var baseUriEnv = Environment.GetEnvironmentVariable("NUGETCALC_BASEURI");
+            var baseUri = baseUriEnv != null
+                ? new Uri(new Uri(baseUriEnv), context.Request.Path.Value)
+                : context.Request.Uri;
+            var redirectUri = new UriBuilder(new Uri(baseUri, method));
             redirectUri.Query = string.Join("&",
                 Enumerable.Range(0, formData.Count)
                     .Select(i => Tuple.Create(formData.GetKey(i), formData.Get(i)))
