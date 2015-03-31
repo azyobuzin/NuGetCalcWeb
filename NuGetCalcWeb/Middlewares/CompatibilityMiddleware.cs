@@ -4,7 +4,6 @@ using Microsoft.Owin;
 using NuGet.Frameworks;
 using NuGet.Packaging;
 using NuGet.Versioning;
-using NuGetCalcWeb.RazorSupport;
 using NuGetCalcWeb.ViewModels;
 
 namespace NuGetCalcWeb.Middlewares
@@ -15,6 +14,8 @@ namespace NuGetCalcWeb.Middlewares
 
         public override async Task Invoke(IOwinContext context)
         {
+            if (context.RespondNotModified()) return;
+
             var q = context.Request.Query;
             var hash = q["hash"];
             var source = q["source"];
@@ -73,6 +74,8 @@ namespace NuGetCalcWeb.Middlewares
 
                 using (package)
                 {
+                    context.Request.CallCancelled.ThrowIfCancellationRequested();
+
                     var identity = package.GetIdentity();
                     model.PackageSelector.DefaultPackageId = identity.Id;
                     model.PackageSelector.DefaultVersion = identity.Version.ToString();

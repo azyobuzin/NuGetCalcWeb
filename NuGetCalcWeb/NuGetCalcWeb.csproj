@@ -418,6 +418,7 @@
       <Link>lib\ILSpy\XmlDoc\XmlDocLoader.cs</Link>
     </Compile>
     <Compile Include="Middlewares\BrowseMiddleware.cs" />
+    <Compile Include="Middlewares\CacheControlMiddleware.cs" />
     <Compile Include="Middlewares\CompatibilityMiddleware.cs" />
     <Compile Include="Middlewares\IndexMiddleware.cs" />
     <Compile Include="Middlewares\InternalServerErrorMiddleware.cs" />

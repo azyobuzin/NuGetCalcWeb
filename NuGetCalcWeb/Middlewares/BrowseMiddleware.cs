@@ -63,6 +63,8 @@ namespace NuGetCalcWeb.Middlewares
             if (context.Request.Query["dl"] == "true")
                 return this.downloadApp(context.Environment);
 
+            if (context.RespondNotModified()) return Task.FromResult(true);
+
             var m = Regex.Match(path, @"^/browse/repositories/([a-zA-Z0-9\+\-]+)/([^/]+)/(.*)$");
             if (m.Success)
             {
@@ -177,6 +179,7 @@ namespace NuGetCalcWeb.Middlewares
                         }).ConfigureAwait(false);
                     }
 
+                    context.Request.CallCancelled.ThrowIfCancellationRequested();
                     await this.filePreviewApp(context.Environment).ConfigureAwait(false);
                 }
             }
