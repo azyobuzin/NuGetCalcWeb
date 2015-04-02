@@ -63,7 +63,8 @@ namespace NuGetCalcWeb.Middlewares
             var func = context.Get<Func<bool>>(CacheControlMiddleware.RespondNotModifiedKey);
             if (func == null)
             {
-                Trace.TraceWarning("{0}?{1}: RespondNotModified is not in the environment", context.Request.Path, context.Request.QueryString);
+                var req = context.Request;
+                Trace.TraceWarning("{0} {1}?{2}: RespondNotModified is not in the environment", req.Method, req.Path, req.QueryString);
                 return false;
             }
             return func();
