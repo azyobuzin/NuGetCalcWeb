@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.Owin;
-using NuGetCalcWeb.RazorSupport;
 using NuGetCalcWeb.ViewModels;
 
 namespace NuGetCalcWeb.Middlewares

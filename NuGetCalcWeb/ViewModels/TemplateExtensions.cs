@@ -1,33 +1,9 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Web;
-using Microsoft.Owin;
-using NuGetCalcWeb.RazorSupport;
-using RazorEngine.Templating;
 
 namespace NuGetCalcWeb.ViewModels
 {
-    public abstract class AppTemplateBase<T> : HtmlTemplateBase<T>, IAppTemplate
-    {
-        public IOwinContext OwinContext { get; set; }
-
-        public override string ResolveUrl(string path)
-        {
-            var pathBase = this.OwinContext.Request.PathBase;
-            return path.StartsWith("~/")
-                ? pathBase.ToUriComponent() + path.Substring(1)
-                : path;
-        }
-
-        public TemplateWriter Include<TModel>(string name, TModel model)
-        {
-            return this.Include(name, model, typeof(TModel));
-        }
-    }
-
     public static class TemplateExtensions
     {
         public static bool IsNullOrEmpty<T>(this IEnumerable<T> source)
