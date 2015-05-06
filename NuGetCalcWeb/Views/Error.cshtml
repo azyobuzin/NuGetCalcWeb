@@ -1,7 +1,8 @@
 ﻿@using NuGetCalcWeb.ViewModels
-@inherits Azyobuzi.OwinRazor.AppTemplateBase<ErrorModel>
+@using NuGetCalcWeb.Views
+@inherits Azyobuzi.OwinRazor.TemplateBase<ErrorModel>
 @{
-    Layout = "_Layout";
+    Layout = new _Layout();
     ViewBag.Title = "An error caused - NuGetCalc";
     ViewBag.NoIndex = true;
     ViewBag.NoAnalytics = true;

@@ -15,13 +15,9 @@ namespace NuGetCalcWeb.Middlewares
         {
             if (body == null)
             {
-                using (var stream = new MemoryStream())
-                using (var writer = new StreamWriter(stream, ResponseHelper.DefaultEncoding))
-                {
-                    RazorHelper.Run(context, writer, "Index");
-                    await writer.FlushAsync().ConfigureAwait(false);
-                    body = stream.ToArray();
-                }
+                body = ResponseHelper.DefaultEncoding.GetBytes(
+                    await new Views.Index() { Context = new TemplateExecutionContext(context) }.RunAsync().ConfigureAwait(false)
+                );
                 context.Request.CallCancelled.ThrowIfCancellationRequested();
             }
 

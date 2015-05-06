@@ -1,7 +1,8 @@
 ﻿@using NuGetCalcWeb.ViewModels
-@inherits Azyobuzi.OwinRazor.AppTemplateBase<CompatibilityModel>
+@using NuGetCalcWeb.Views
+@inherits Azyobuzi.OwinRazor.TemplateBase<CompatibilityModel>
 @{
-    Layout = "_Layout";
+    Layout = new _Layout();
     ViewBag.Title = "Compatibility Result - NuGetCalc";
 }
 
@@ -10,7 +11,7 @@
     @ExternalSnippets.Default.AdTop
     <div class="row">
         <div class="col-sm-5" id="compatibility-pkgselector">
-            @Include("_PackageSelector", Model.PackageSelector)
+            @await PartialAsync(new _PackageSelector(), Model.PackageSelector)
         </div>
         <div class="col-sm-7">
             @if (Model.Error == null)

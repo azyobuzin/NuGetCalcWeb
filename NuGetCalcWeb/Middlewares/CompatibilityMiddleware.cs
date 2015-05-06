@@ -45,7 +45,7 @@ namespace NuGetCalcWeb.Middlewares
                     if (string.IsNullOrWhiteSpace(packageId))
                     {
                         // Homepage of NuGetCalc Online
-                        await context.Response.View("CompatibilityStatic", model.PackageSelector).ConfigureAwait(false);
+                        await context.Response.View(new Views.CompatibilityStatic(), model.PackageSelector).ConfigureAwait(false);
                         return;
                     }
                     if (string.IsNullOrWhiteSpace(targetFramework))
@@ -104,7 +104,7 @@ namespace NuGetCalcWeb.Middlewares
 
         RESPOND:
             context.Response.StatusCode = statusCode;
-            await context.Response.View("Compatibility", model).ConfigureAwait(false);
+            await context.Response.View(new Views.Compatibility(), model).ConfigureAwait(false);
         }
     }
 }

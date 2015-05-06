@@ -1,7 +1,8 @@
 ﻿@using NuGetCalcWeb.ViewModels
-@inherits Azyobuzi.OwinRazor.AppTemplateBase<dynamic>
+@using NuGetCalcWeb.Views
+@inherits Azyobuzi.OwinRazor.TemplateBase
 @{
-    Layout = "_Layout";
+    Layout = new _Layout();
     ViewBag.Title = "NuGetCalc";
 }
 

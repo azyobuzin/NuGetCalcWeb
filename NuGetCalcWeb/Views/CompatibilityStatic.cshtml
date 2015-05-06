@@ -1,7 +1,8 @@
 ﻿@using NuGetCalcWeb.ViewModels
-@inherits Azyobuzi.OwinRazor.AppTemplateBase<dynamic>
+@using NuGetCalcWeb.Views
+@inherits Azyobuzi.OwinRazor.TemplateBase<PackageSelectorModel>
 @{
-    Layout = "_Layout";
+    Layout = new _Layout();
     ViewBag.Title = "NuGetCalc Web Version";
 }
 
@@ -9,7 +10,7 @@
     <section>
         <h1>Find The Most Compatible Reference Assemblies</h1>
         @ExternalSnippets.Default.AdTop
-        @Include("_PackageSelector")
+        @await PartialAsync(new _PackageSelector(), Model)
     </section>
 </div>
 

@@ -13,7 +13,7 @@ namespace NuGetCalcWeb
         public static Task Error(this IOwinResponse response, int statusCode, ErrorModel errorModel)
         {
             response.StatusCode = statusCode;
-            return response.View("Error", errorModel);
+            return response.View(new Views.Error(), errorModel);
         }
     }
 }

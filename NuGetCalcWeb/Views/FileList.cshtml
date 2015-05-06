@@ -1,7 +1,8 @@
 ﻿@using NuGetCalcWeb.ViewModels
-@inherits Azyobuzi.OwinRazor.AppTemplateBase<FileListModel>
+@using NuGetCalcWeb.Views
+@inherits Azyobuzi.OwinRazor.TemplateBase<FileListModel>
 @{
-    Layout = "_Layout";
+    Layout = new _Layout();
     ViewBag.Title = Model.Breadcrumbs.Length == 0 ? Model.Identity.ToString() : Model.Breadcrumbs[Model.Breadcrumbs.Length - 1];
     ViewBag.NoIndex = true;
 }

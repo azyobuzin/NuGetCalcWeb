@@ -1,11 +1,12 @@
-﻿@using NuGetCalcWeb.ViewModels
-@using NuGetCalcWeb.ViewModels.FilePreview
-@inherits Azyobuzi.OwinRazor.AppTemplateBase<AssemblyModel>
+﻿@using NuGetCalcWeb.ViewModels.FilePreview
+@using NuGetCalcWeb.Views
+@using NuGetCalcWeb.Views.FilePreview
+@inherits Azyobuzi.OwinRazor.TemplateBase<AssemblyModel>
 @{
-    Layout = "_Layout";
+    Layout = new _Layout();
 }
 
-@Include("FilePreview/_Header", Model.Header)
+@await PartialAsync(new _Header(), Model.Header)
 
 <div class="container-fluid">
     <div class="row">
@@ -19,7 +20,7 @@
                         <ul class="collapse">
                             @foreach (var t in ns.Types)
                             {
-                                @Include("FilePreview/_Type", t)
+                                @await PartialAsync(new _Type(), t)
                             }
                         </ul>
                     </li>

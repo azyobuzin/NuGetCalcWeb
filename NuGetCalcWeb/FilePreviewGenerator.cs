@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
@@ -17,7 +16,7 @@ using ICSharpCode.NRefactory.CSharp;
 using Microsoft.Owin;
 using Mono.Cecil;
 using NuGetCalcWeb.ViewModels.FilePreview;
-using RazorEngine.Templating;
+using NuGetCalcWeb.Views.FilePreview;
 
 namespace NuGetCalcWeb
 {
@@ -155,7 +154,7 @@ namespace NuGetCalcWeb
                 model.TypeDescriptions = await Task.WhenAll(tasks).ConfigureAwait(false);
             }
 
-            this.RunTemplate("Assembly", model);
+            await this.RunTemplate(new Assembly(), model).ConfigureAwait(false);
         }
 
         private static TypeModel CreateTypeModel(TypeDefinition type, List<TypeDefinition> types)
@@ -216,14 +215,15 @@ namespace NuGetCalcWeb
             return output.ToString();
         }
 
-        private void RunTemplate<T>(string viewName, T model) where T : FilePreviewModel
+        private async Task RunTemplate<T>(TemplateBase<T> template, T model) where T : FilePreviewModel
         {
             model.Header = this.header;
-            var viewBag = new DynamicViewBag();
-            viewBag.SetValue("Title", this.header.Breadcrumbs[this.header.Breadcrumbs.Length - 1]);
-            viewBag.SetValue("NoIndex", true);
-            using (var writer = new StreamWriter(this.htmlFile.FullName, false, ResponseHelper.DefaultEncoding))
-                RazorHelper.Run(this.owinContext, writer, "FilePreview/" + viewName, model, viewBag);
+            var viewData = new ViewDataDictionary();
+            viewData["Title"] = this.header.Breadcrumbs[this.header.Breadcrumbs.Length - 1];
+            viewData["NoIndex"] = true;
+            template.Context = new TemplateExecutionContext(this.owinContext, viewData);
+            template.Model = model;
+            File.WriteAllText(this.htmlFile.FullName, await template.RunAsync().ConfigureAwait(false), ResponseHelper.DefaultEncoding);
         }
 
         private async Task GenerateFromFile()
@@ -243,24 +243,25 @@ namespace NuGetCalcWeb
 
             if (text != null)
             {
-                this.RunTemplate("TextFile", new ContentModel(
+                await this.RunTemplate(new TextFile(), new ContentModel(
                     this.input.Extension.ToLowerInvariant() == ".txt"
                         ? HttpUtility.HtmlEncode(text)
                         : await HighlightAuto(text).ConfigureAwait(false)
-                ));
+                )).ConfigureAwait(false);
             }
             else if (charCode == FileType.EMPTYFILE)
             {
-                this.RunTemplate("Alert", new ContentModel("This is an empty file."));
+                await this.RunTemplate(new Alert(), new ContentModel("This is an empty file.")).ConfigureAwait(false);
             }
             else if (charCode is FileType.Image)
             {
-                this.RunTemplate("ImageFile", new ContentModel(
-                    Uri.EscapeUriString(this.input.Name) + "?dl=true"));
+                await this.RunTemplate(new ImageFile(), new ContentModel(
+                    Uri.EscapeUriString(this.input.Name) + "?dl=true"
+                )).ConfigureAwait(false);
             }
             else
             {
-                this.RunTemplate("Alert", new ContentModel("This is a binary file."));
+                await this.RunTemplate(new Alert(), new ContentModel("This is a binary file.")).ConfigureAwait(false);
             }
         }
 

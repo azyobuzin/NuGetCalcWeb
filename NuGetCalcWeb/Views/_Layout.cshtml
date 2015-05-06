@@ -1,5 +1,5 @@
 ﻿@using NuGetCalcWeb.ViewModels
-@inherits Azyobuzi.OwinRazor.AppTemplateBase<dynamic>
+@inherits Azyobuzi.OwinRazor.TemplateBase
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,7 +16,7 @@
     {
         @ExternalSnippets.Default.Analytics
     }
-    @RenderSection("Header", false)
+    @await RenderSectionAsync("Header", false)
     <script src="http://code.jquery.com/jquery-2.1.3.min.js"></script>
 </head>
 <body>

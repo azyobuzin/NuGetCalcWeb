@@ -3,14 +3,14 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Text.RegularExpressions;
-using RazorEngine.Text;
+using Azyobuzi.OwinRazor;
 
 namespace NuGetCalcWeb.ViewModels
 {
     public class ExternalSnippets
     {
-        public IEncodedString Analytics { get; private set; }
-        public IEncodedString AdTop { get; private set; }
+        public RawString Analytics { get; private set; }
+        public RawString AdTop { get; private set; }
 
         public ExternalSnippets(string analytics, string adTop)
         {

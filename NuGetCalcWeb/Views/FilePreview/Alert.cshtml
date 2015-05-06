@@ -1,11 +1,12 @@
-﻿@using NuGetCalcWeb.ViewModels
-@using NuGetCalcWeb.ViewModels.FilePreview
-@inherits Azyobuzi.OwinRazor.AppTemplateBase<ContentModel>
+﻿@using NuGetCalcWeb.ViewModels.FilePreview
+@using NuGetCalcWeb.Views
+@using NuGetCalcWeb.Views.FilePreview
+@inherits Azyobuzi.OwinRazor.TemplateBase<ContentModel>
 @{
-    Layout = "_Layout";
+    Layout = new _Layout();
 }
 
-@Include("FilePreview/_Header", Model.Header)
+@await PartialAsync(new _Header(), Model.Header)
 
 <div class="container">
     <p class="alert alert-warning">@Model.Content</p>

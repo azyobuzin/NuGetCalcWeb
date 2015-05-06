@@ -156,7 +156,7 @@ namespace NuGetCalcWeb.Middlewares
                     if (!dir.Exists)
                         goto NOT_FOUND;
 
-                    await context.Response.View("FileList", new FileListModel()
+                    await context.Response.View(new Views.FileList(), new FileListModel()
                     {
                         Identity = package.GetIdentity(),
                         Breadcrumbs = s,
