@@ -1,7 +1,8 @@
-﻿/// <reference path="../Scripts/jquery-2.1.3.js" />
+﻿/// <reference path="../Scripts/jquery-2.1.4.js" />
+/// <reference path="../Scripts/jquery-2.1.4.intellisense.js" />
 
 (function () {
-    $typedesc = $(".typedesc");
+    var $typedesc = $(".typedesc");
 
     $("#link-asm").on("click", function () {
         $typedesc.removeClass("active");

@@ -47,8 +47,9 @@
       <HintPath>..\packages\Azyobuzi.OwinRazor.2.0.0.0\lib\net45\Azyobuzi.OwinRazor.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="ByteSize">
-      <HintPath>..\packages\ByteSize.0.3.0\lib\portable-net4+sl5+netcore45+wp8+MonoAndroid1+MonoTouch1\ByteSize.dll</HintPath>
+    <Reference Include="ByteSizeLib, Version=0.2.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\ByteSize.1.0.0\lib\portable-net4+sl5+netcore45+wp8+MonoAndroid1+MonoTouch1\ByteSizeLib.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Hnx8.ReadJEnc">
       <HintPath>..\lib\ReadJEnc\Hnx8.ReadJEnc.dll</HintPath>
@@ -67,9 +68,9 @@
     <Reference Include="Microsoft.Web.XmlTransform">
       <HintPath>..\packages\Microsoft.Web.Xdt.2.1.1\lib\net40\Microsoft.Web.XmlTransform.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="NuGet.Client, Version=3.0.0.0, Culture=neutral, PublicKeyToken=2e465378e3b1a8dd, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -99,8 +100,8 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\NuGet.Configuration.1.0.0-pre-20150220022717\lib\net45\NuGet.Configuration.dll</HintPath>
     </Reference>
-    <Reference Include="NuGet.Core, Version=2.8.60318.667, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Nuget.Core.2.8.5\lib\net40-Client\NuGet.Core.dll</HintPath>
+    <Reference Include="NuGet.Core, Version=2.8.60717.93, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\NuGet.Core.2.8.6\lib\net40-Client\NuGet.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="NuGet.Data, Version=3.0.0.0, Culture=neutral, PublicKeyToken=2e465378e3b1a8dd, processorArchitecture=MSIL">
@@ -161,12 +162,6 @@
     <Content Include="packages.config">
       <SubType>Designer</SubType>
     </Content>
-    <None Include="Scripts\jquery-2.1.3.intellisense.js" />
-    <Content Include="Scripts\bloodhound.js" />
-    <Content Include="Scripts\bloodhound.min.js" />
-    <Content Include="Scripts\jquery-2.1.3.js" />
-    <Content Include="Scripts\jquery-2.1.3.min.js" />
-    <Content Include="Scripts\jquery-2.1.3.min.map" />
     <CompileRazor Include="Views\Error.cshtml" />
     <CompileRazor Include="Views\CompatibilityStatic.cshtml" />
     <CompileRazor Include="Views\_PackageSelector.cshtml" />
@@ -180,6 +175,12 @@
     <CompileRazor Include="Views\FilePreview\ImageFile.cshtml" />
     <CompileRazor Include="Views\FilePreview\_Type.cshtml" />
     <CompileRazor Include="Views\FilePreview\Assembly.cshtml" />
+    <None Include="Scripts\jquery-2.1.4.intellisense.js" />
+    <Content Include="Scripts\bloodhound.js" />
+    <Content Include="Scripts\bloodhound.min.js" />
+    <Content Include="Scripts\jquery-2.1.4.js" />
+    <Content Include="Scripts\jquery-2.1.4.min.js" />
+    <Content Include="Scripts\jquery-2.1.4.min.map" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

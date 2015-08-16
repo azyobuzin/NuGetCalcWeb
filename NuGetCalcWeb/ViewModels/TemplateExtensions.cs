@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using ByteSizeLib;
 
 namespace NuGetCalcWeb.ViewModels
 {
@@ -26,7 +27,7 @@ namespace NuGetCalcWeb.ViewModels
 
         public static string HumanizeBytes(this long length)
         {
-            var b = ByteSize.ByteSize.FromBytes(length);
+            var b = ByteSize.FromBytes(length);
             return $"{b.LargestWholeNumberValue:0.##} {b.LargestWholeNumberSymbol}";
         }
     }
