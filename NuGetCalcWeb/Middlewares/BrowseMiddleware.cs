@@ -51,8 +51,8 @@ namespace NuGetCalcWeb.Middlewares
                 .Build();
         }
 
-        private AppFunc downloadApp;
-        private AppFunc filePreviewApp;
+        private readonly AppFunc downloadApp;
+        private readonly AppFunc filePreviewApp;
 
         public override Task Invoke(IOwinContext context)
         {
@@ -69,14 +69,14 @@ namespace NuGetCalcWeb.Middlewares
             var m = Regex.Match(path, @"^/browse/repositories/([a-zA-Z0-9\+\-]+)/([^/]+)/(.*)$");
             if (m.Success)
             {
-                return BrowseRepositories(context,
+                return this.BrowseRepositories(context,
                     m.Groups[1].Value, m.Groups[2].Value, m.Groups[3].Value);
             }
 
             m = Regex.Match(path, @"^/browse/upload/([a-zA-Z0-9\+\-]+)/(.*)$");
             if (m.Success)
             {
-                return BrowseUpload(context,
+                return this.BrowseUpload(context,
                     m.Groups[1].Value, m.Groups[2].Value);
             }
 
@@ -118,12 +118,13 @@ namespace NuGetCalcWeb.Middlewares
             }
             else
             {
-                redirectTo = string.Format("upload/{0}/", hash);
+                redirectTo = string.Concat("upload/", hash, "/");
             }
 
             context.Response.StatusCode = 303;
-            context.Response.Headers.Set("Location", string.Format("{0}/{1}",
+            context.Response.Headers.Set("Location", string.Concat(
                 context.Request.Uri.GetLeftPart(UriPartial.Path),
+                "/",
                 redirectTo
             ));
         }
@@ -188,7 +189,7 @@ namespace NuGetCalcWeb.Middlewares
             GC.Collect(); // to release a handle of nuspec file
             return;
 
-        NOT_FOUND:
+            NOT_FOUND:
             await this.Next.Invoke(context).ConfigureAwait(false);
         }
     }

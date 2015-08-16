@@ -23,6 +23,7 @@ namespace NuGetCalcWeb
             {
                 p.EnableRaisingEvents = true;
                 var processWaitTask = new TaskCompletionSource<bool>();
+                // ReSharper disable once AccessToDisposedClosure
                 p.Exited += (sender, e) => processWaitTask.SetResult(p.ExitCode == 0);
 
                 var stdout = p.StandardOutput.ReadToEndAsync();
@@ -37,8 +38,8 @@ namespace NuGetCalcWeb
 
                 if (await processWaitTask.Task.ConfigureAwait(false))
                     return await stdout.ConfigureAwait(false);
-                else
-                    throw new NodeException(p.ExitCode, await stdout.ConfigureAwait(false), await stderr.ConfigureAwait(false));
+
+                throw new NodeException(p.ExitCode, await stdout.ConfigureAwait(false), await stderr.ConfigureAwait(false));
             }
         }
     }
@@ -46,7 +47,7 @@ namespace NuGetCalcWeb
     public class NodeException : Exception
     {
         public NodeException(int exitCode, string stdout, string stderr)
-            : base(string.Format("Node exited with {0}: {1}", exitCode, stderr))
+            : base($"Node exited with {exitCode}: {stderr}")
         {
             this.ExitCode = exitCode;
             this.StandardOutput = stdout;

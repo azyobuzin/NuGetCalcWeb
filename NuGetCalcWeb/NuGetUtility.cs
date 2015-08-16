@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -21,7 +22,7 @@ namespace NuGetCalcWeb
 
     public static class NuGetUtility
     {
-        private static ConcurrentDictionary<string, Resources> resourceCache = new ConcurrentDictionary<string, Resources>();
+        private static readonly ConcurrentDictionary<string, Resources> resourceCache = new ConcurrentDictionary<string, Resources>();
 
         private static Resources GetResources(string source)
         {
@@ -51,7 +52,7 @@ namespace NuGetCalcWeb
                 return md5.ComputeHash(Encoding.UTF8.GetBytes(source)).Base64();
         }
 
-        private static ConcurrentDictionary<Tuple<string, PackageIdentity>, Task> getPackageTasks = new ConcurrentDictionary<Tuple<string, PackageIdentity>, Task>();
+        private static readonly ConcurrentDictionary<Tuple<string, PackageIdentity>, Task> getPackageTasks = new ConcurrentDictionary<Tuple<string, PackageIdentity>, Task>();
 
         public static async Task<DirectoryInfo> GetPackage(string source, string packageId, NuGetVersion version)
         {
@@ -140,6 +141,7 @@ namespace NuGetCalcWeb
             return directory;
         }
 
+        [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
         public static FrameworkSpecificGroup FindMostCompatibleReferenceGroup(PackageReaderBase package, NuGetFramework target)
         {
             var groups = package.GetReferenceItems(); //中身は List<T> なので二度舐め OK
@@ -181,12 +183,12 @@ namespace NuGetCalcWeb
             {
                 var tempDirectory = Path.Combine("App_Data", "temp", Path.GetRandomFileName());
                 var pathResolver = new PackagePathResolver(tempDirectory);
-                PackageIdentity identity;
 
                 try
                 {
                     using (var stream = fileInfo.OpenRead())
                     {
+                        PackageIdentity identity;
                         using (var package = new PackageReader(stream, true))
                             identity = package.GetIdentity();
 

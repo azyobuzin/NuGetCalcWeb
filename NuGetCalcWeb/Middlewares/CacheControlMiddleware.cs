@@ -19,9 +19,9 @@ namespace NuGetCalcWeb.Middlewares
             this.etag = string.Concat(BitConverter.GetBytes(utcNow.Ticks).Select(b => b.ToString("x2")));
         }
 
-        private DateTime lastModified;
-        private string lastModifiedString;
-        private string etag;
+        private readonly DateTime lastModified;
+        private readonly string lastModifiedString;
+        private readonly string etag;
 
         public override Task Invoke(IOwinContext context)
         {
@@ -29,11 +29,11 @@ namespace NuGetCalcWeb.Middlewares
             {
                 var res = context.Response;
                 res.Headers.Set("Last-Modified", this.lastModifiedString);
-                res.ETag = string.Format("\"{0}\"", this.etag);
+                res.ETag = string.Concat("\"", this.etag, "\"");
                 context.Set(RespondNotModifiedKey, ((Func<bool>)(() =>
                 {
                     var ifNoneMatch = context.Request.Headers.GetCommaSeparatedValues("If-None-Match");
-                    if (ifNoneMatch != null && ifNoneMatch.Any(x => x == "*" || x == etag))
+                    if (ifNoneMatch != null && ifNoneMatch.Any(x => x == "*" || x == this.etag))
                     {
                         res.StatusCode = 304;
                         return true;
@@ -43,7 +43,7 @@ namespace NuGetCalcWeb.Middlewares
                     DateTime ifModifiedSinceDt;
                     if (ifModifiedSince != null
                         && DateTime.TryParseExact(ifModifiedSince, "R", CultureInfo.InvariantCulture, DateTimeStyles.None, out ifModifiedSinceDt)
-                        && ifModifiedSinceDt >= lastModified)
+                        && ifModifiedSinceDt >= this.lastModified)
                     {
                         res.StatusCode = 304;
                         return true;

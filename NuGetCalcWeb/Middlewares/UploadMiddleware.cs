@@ -69,7 +69,7 @@ namespace NuGetCalcWeb.Middlewares
                     .Select(i => Tuple.Create(formData.GetKey(i), formData.Get(i)))
                     .Where(t => t.Item1 != "method" && t.Item1 != "hash" && !string.IsNullOrEmpty(t.Item2))
                     .Concat(new[] { Tuple.Create("hash", hash) })
-                    .Select(t => string.Format("{0}={1}", Uri.EscapeDataString(t.Item1), Uri.EscapeDataString(t.Item2)))
+                    .Select(t => string.Concat(Uri.EscapeDataString(t.Item1), "=", Uri.EscapeDataString(t.Item2)))
             );
 
             context.Response.StatusCode = 303;

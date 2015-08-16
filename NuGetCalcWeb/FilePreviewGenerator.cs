@@ -28,7 +28,7 @@ namespace NuGetCalcWeb
                 input.FullName.Substring(Path.GetFullPath(Path.Combine("App_Data", "packages")).Length + 1));
         }
 
-        private static ConcurrentDictionary<string, Task> tasks = new ConcurrentDictionary<string, Task>(StringComparer.OrdinalIgnoreCase);
+        private static readonly ConcurrentDictionary<string, Task> tasks = new ConcurrentDictionary<string, Task>(StringComparer.OrdinalIgnoreCase);
 
         public FilePreviewGenerator(FileInfo input)
         {
@@ -37,17 +37,11 @@ namespace NuGetCalcWeb
         }
 
         private readonly FileInfo input;
-        private FileInfo htmlFile;
+        private readonly FileInfo htmlFile;
         private IOwinContext owinContext;
         private HeaderModel header;
 
-        public bool NeedsGenerate
-        {
-            get
-            {
-                return tasks.ContainsKey(this.input.FullName) || !this.htmlFile.Exists;
-            }
-        }
+        public bool NeedsGenerate => tasks.ContainsKey(this.input.FullName) || !this.htmlFile.Exists;
 
         public async Task GenerateHtml(IOwinContext owinContext, HeaderModel header)
         {
@@ -198,7 +192,7 @@ namespace NuGetCalcWeb
 
             if (!(type.IsEnum || type.IsInterface || type.IsDelegate()))
             {
-                var typeNode = astBuilder.SyntaxTree.GetTypes(false)
+                var typeNode = astBuilder.SyntaxTree.GetTypes()
                     .OfType<TypeDeclaration>().First();
 
                 // Remove nested types
@@ -222,10 +216,13 @@ namespace NuGetCalcWeb
         private async Task RunTemplate<T>(TemplateBase<T> template, T model) where T : FilePreviewModel
         {
             model.Header = this.header;
-            var viewData = new ViewDataDictionary();
-            viewData["Title"] = this.header.Breadcrumbs[this.header.Breadcrumbs.Length - 1];
-            viewData["NoIndex"] = true;
-            template.Context = new TemplateExecutionContext(this.owinContext, viewData);
+            template.Context = new TemplateExecutionContext(
+                this.owinContext,
+                new ViewDataDictionary
+                {
+                    ["Title"] = this.header.Breadcrumbs[this.header.Breadcrumbs.Length - 1],
+                    ["NoIndex"] = true
+                });
             template.Model = model;
             File.WriteAllText(this.htmlFile.FullName, await template.RunAsync().ConfigureAwait(false), ResponseHelper.DefaultEncoding);
         }

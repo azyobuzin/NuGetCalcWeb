@@ -27,7 +27,7 @@ namespace NuGetCalcWeb.ViewModels
         public static string HumanizeBytes(this long length)
         {
             var b = ByteSize.ByteSize.FromBytes(length);
-            return string.Format("{0:0.##} {1}", b.LargestWholeNumberValue, b.LargestWholeNumberSymbol);
+            return $"{b.LargestWholeNumberValue:0.##} {b.LargestWholeNumberSymbol}";
         }
     }
 }

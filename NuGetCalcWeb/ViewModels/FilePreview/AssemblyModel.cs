@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace NuGetCalcWeb.ViewModels.FilePreview
+﻿namespace NuGetCalcWeb.ViewModels.FilePreview
 {
     public class AssemblyModel : FilePreviewModel
     {
