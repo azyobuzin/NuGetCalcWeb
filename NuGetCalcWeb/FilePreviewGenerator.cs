@@ -134,6 +134,7 @@ namespace NuGetCalcWeb
                     var type = types[i];
                     tasks[i] = Task.Run(async () =>
                     {
+                        // ReSharper disable AccessToDisposedClosure
                         await genSemaphore.WaitAsync().ConfigureAwait(false);
                         try
                         {
@@ -148,9 +149,11 @@ namespace NuGetCalcWeb
                         {
                             genSemaphore.Release();
                         }
+                        // ReSharper restore AccessToDisposedClosure
                     });
                 }
 
+                // Wait all tasks here
                 model.TypeDescriptions = await Task.WhenAll(tasks).ConfigureAwait(false);
             }
 
@@ -195,7 +198,8 @@ namespace NuGetCalcWeb
 
             if (!(type.IsEnum || type.IsInterface || type.IsDelegate()))
             {
-                var typeNode = astBuilder.SyntaxTree.GetTypes(false).First();
+                var typeNode = astBuilder.SyntaxTree.GetTypes(false)
+                    .OfType<TypeDeclaration>().First();
 
                 // Remove nested types
                 foreach (var node in typeNode.Children)

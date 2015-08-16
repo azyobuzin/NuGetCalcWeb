@@ -23,6 +23,7 @@
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
     <NuGetPackageImportStamp>61eea210</NuGetPackageImportStamp>
+    <UseGlobalApplicationHostFile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -215,8 +216,8 @@
     <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\Ast\NRefactoryExtensions.cs">
       <Link>lib\ICSharpCode.Decompiler\Ast\NRefactoryExtensions.cs</Link>
     </Compile>
-    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\Ast\TextOutputFormatter.cs">
-      <Link>lib\ICSharpCode.Decompiler\Ast\TextOutputFormatter.cs</Link>
+    <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\Ast\TextTokenWriter.cs">
+      <Link>lib\ICSharpCode.Decompiler\Ast\TextTokenWriter.cs</Link>
     </Compile>
     <Compile Include="..\lib\ILSpy\ICSharpCode.Decompiler\Ast\Transforms\AddCheckedBlocks.cs">
       <Link>lib\ICSharpCode.Decompiler\Ast\Transforms\AddCheckedBlocks.cs</Link>
