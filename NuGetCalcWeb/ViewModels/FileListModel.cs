@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using NuGet.PackagingCore;
+using NuGet.Packaging.Core;
 
 namespace NuGetCalcWeb.ViewModels
 {

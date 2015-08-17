@@ -9,11 +9,13 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using NuGet.Client;
 using NuGet.Configuration;
 using NuGet.Frameworks;
 using NuGet.Packaging;
-using NuGet.PackagingCore;
+using NuGet.Packaging.Core;
+using NuGet.Protocol.Core.Types;
+using NuGet.Protocol.Core.v2;
+using NuGet.Protocol.Core.v3;
 using NuGet.Versioning;
 
 namespace NuGetCalcWeb
@@ -28,7 +30,9 @@ namespace NuGetCalcWeb
         {
             var result = resourceCache.GetOrAdd(source, key =>
             {
-                var repo = RepositoryFactory.Create(key);
+                var repo = Repository.CreateSource(
+                    Repository.Provider.GetCoreV3().Concat(Repository.Provider.GetCoreV2()),
+                    key);
                 return Tuple.Create(repo.GetResource<MetadataResource>(), repo.GetResource<DownloadResource>());
             });
 
@@ -51,6 +55,8 @@ namespace NuGetCalcWeb
             using (var md5 = MD5.Create())
                 return md5.ComputeHash(Encoding.UTF8.GetBytes(source)).Base64();
         }
+
+        private static readonly ISettings nugetSettings = NullSettings.Instance;
 
         private static readonly ConcurrentDictionary<Tuple<string, PackageIdentity>, Task> getPackageTasks = new ConcurrentDictionary<Tuple<string, PackageIdentity>, Task>();
 
@@ -86,7 +92,10 @@ namespace NuGetCalcWeb
                         Stream stream;
                         try
                         {
-                            stream = await resources.Item2.GetStream(identity, CancellationToken.None).ConfigureAwait(false);
+                            var result = await resources.Item2
+                                .GetDownloadResourceResultAsync(identity, nugetSettings, CancellationToken.None)
+                                .ConfigureAwait(false);
+                            stream = result.PackageStream;
                         }
                         catch (Exception ex)
                         {
@@ -103,7 +112,7 @@ namespace NuGetCalcWeb
                                 {
                                     await stream.CopyToAsync(buffer).ConfigureAwait(false);
                                     buffer.Position = 0;
-                                    await PackageExtractor.ExtractPackageAsync(buffer, identity, pathResolver,
+                                    await PackageExtractor.ExtractPackageAsync(buffer, pathResolver,
                                         new PackageExtractionContext() { CopySatelliteFiles = true },
                                         PackageSaveModes.Nuspec, CancellationToken.None).ConfigureAwait(false);
                                 }
@@ -188,13 +197,9 @@ namespace NuGetCalcWeb
                 {
                     using (var stream = fileInfo.OpenRead())
                     {
-                        PackageIdentity identity;
-                        using (var package = new PackageReader(stream, true))
-                            identity = package.GetIdentity();
-
                         stream.Position = 0;
 
-                        await PackageExtractor.ExtractPackageAsync(stream, identity, pathResolver,
+                        await PackageExtractor.ExtractPackageAsync(stream, pathResolver,
                             new PackageExtractionContext() { CopySatelliteFiles = true },
                             PackageSaveModes.Nuspec, CancellationToken.None).ConfigureAwait(false);
                     }

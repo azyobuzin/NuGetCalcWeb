@@ -1,4 +1,4 @@
-﻿using NuGet.PackagingCore;
+﻿using NuGet.Packaging.Core;
 
 namespace NuGetCalcWeb.ViewModels.FilePreview
 {
