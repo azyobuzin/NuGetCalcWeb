@@ -15,7 +15,7 @@ namespace NuGetCalcWeb.Middlewares
             if (body == null)
             {
                 body = ResponseHelper.DefaultEncoding.GetBytes(
-                    await new Views.Index() { Context = new TemplateExecutionContext(context) }.RunAsync().ConfigureAwait(false)
+                    await new Views.Index { Context = new TemplateExecutionContext(context) }.RunAsync().ConfigureAwait(false)
                 );
                 context.Request.CallCancelled.ThrowIfCancellationRequested();
             }

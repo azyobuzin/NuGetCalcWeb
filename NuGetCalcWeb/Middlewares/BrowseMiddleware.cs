@@ -28,7 +28,7 @@ namespace NuGetCalcWeb.Middlewares
             var downloadDir = Path.Combine("App_Data", "packages");
             Directory.CreateDirectory(downloadDir); // Prevent error from FileSystem
             this.downloadApp = app.New()
-                .UseStaticFiles(new StaticFileOptions()
+                .UseStaticFiles(new StaticFileOptions
                 {
                     RequestPath = new PathString("/browse"),
                     FileSystem = new PhysicalFileSystem(downloadDir),
@@ -40,7 +40,7 @@ namespace NuGetCalcWeb.Middlewares
             var filePreviewDir = Path.Combine("App_Data", "html");
             Directory.CreateDirectory(filePreviewDir);
             this.filePreviewApp = app.New()
-                .UseStaticFiles(new StaticFileOptions()
+                .UseStaticFiles(new StaticFileOptions
                 {
                     RequestPath = new PathString("/browse"),
                     FileSystem = new PhysicalFileSystem(filePreviewDir),
@@ -151,13 +151,13 @@ namespace NuGetCalcWeb.Middlewares
 
             using (var package = new PackageFolderReader(root))
             {
-                if (path == "" || path.EndsWith("/"))
+                if (path == "" || path.EndsWith("/", StringComparison.Ordinal))
                 {
                     var dir = new DirectoryInfo(Path.Combine(root.FullName, Path.Combine(s)));
                     if (!dir.Exists)
                         goto NOT_FOUND;
 
-                    await context.Response.View(new Views.FileList(), new FileListModel()
+                    await context.Response.View(new Views.FileList(), new FileListModel
                     {
                         Identity = package.GetIdentity(),
                         Breadcrumbs = s,
@@ -174,7 +174,7 @@ namespace NuGetCalcWeb.Middlewares
                     var gen = new FilePreviewGenerator(file);
                     if (gen.NeedsGenerate)
                     {
-                        await gen.GenerateHtml(context, new HeaderModel()
+                        await gen.GenerateHtml(context, new HeaderModel
                         {
                             Identity = package.GetIdentity(),
                             Breadcrumbs = s

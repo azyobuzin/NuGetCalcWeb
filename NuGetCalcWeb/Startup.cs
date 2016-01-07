@@ -36,7 +36,7 @@ namespace NuGetCalcWeb
                     b => b.Use<UploadMiddleware>()
                 )
                 .Map("/content", b =>
-                    b.UseStaticFiles(new StaticFileOptions()
+                    b.UseStaticFiles(new StaticFileOptions
                     {
                         FileSystem = new PhysicalFileSystem("content")
                     })

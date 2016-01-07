@@ -88,7 +88,7 @@ namespace NuGetCalcWeb
             ModuleDefinition module = null;
             try
             {
-                module = ModuleDefinition.ReadModule(this.input.FullName, new ReaderParameters()
+                module = ModuleDefinition.ReadModule(this.input.FullName, new ReaderParameters
                 {
                     ReadingMode = ReadingMode.Immediate,
                     AssemblyResolver = new MyAssemblyResolver()
@@ -102,7 +102,7 @@ namespace NuGetCalcWeb
                 return;
             }
 
-            var model = new AssemblyModel()
+            var model = new AssemblyModel
             {
                 AssemblyName = module.Assembly.Name.Name,
                 AssemblyDescription = await HighlightCs(GenerateAssemblyDescription(module)).ConfigureAwait(false)
@@ -113,7 +113,7 @@ namespace NuGetCalcWeb
                 .Where(t => t.IsPublic)
                 .GroupBy(t => t.Namespace)
                 .OrderBy(g => g.Key)
-                .Select(g => new NamespaceModel()
+                .Select(g => new NamespaceModel
                 {
                     Name = g.Key,
                     Types = g.OrderBy(t => t.Name).Select(t => CreateTypeModel(t, types)).ToArray()
@@ -133,7 +133,7 @@ namespace NuGetCalcWeb
                         try
                         {
                             Debug.WriteLine(type.FullName);
-                            return new TypeDescription()
+                            return new TypeDescription
                             {
                                 FullName = type.FullName,
                                 Code = await HighlightCs(GenerateTypeDescription(module, type)).ConfigureAwait(false)
@@ -157,7 +157,7 @@ namespace NuGetCalcWeb
         private static TypeModel CreateTypeModel(TypeDefinition type, List<TypeDefinition> types)
         {
             types.Add(type);
-            return new TypeModel()
+            return new TypeModel
             {
                 Name = type.Name,
                 FullName = type.FullName,

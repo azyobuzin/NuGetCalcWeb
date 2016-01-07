@@ -113,7 +113,7 @@ namespace NuGetCalcWeb
                                     await stream.CopyToAsync(buffer).ConfigureAwait(false);
                                     buffer.Position = 0;
                                     await PackageExtractor.ExtractPackageAsync(buffer, pathResolver,
-                                        new PackageExtractionContext() { CopySatelliteFiles = true },
+                                        new PackageExtractionContext { CopySatelliteFiles = true },
                                         PackageSaveModes.Nuspec, CancellationToken.None).ConfigureAwait(false);
                                 }
                             }
@@ -200,7 +200,7 @@ namespace NuGetCalcWeb
                         stream.Position = 0;
 
                         await PackageExtractor.ExtractPackageAsync(stream, pathResolver,
-                            new PackageExtractionContext() { CopySatelliteFiles = true },
+                            new PackageExtractionContext { CopySatelliteFiles = true },
                             PackageSaveModes.Nuspec, CancellationToken.None).ConfigureAwait(false);
                     }
 

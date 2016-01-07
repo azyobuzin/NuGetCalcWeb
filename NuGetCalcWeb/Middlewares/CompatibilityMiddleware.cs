@@ -24,9 +24,9 @@ namespace NuGetCalcWeb.Middlewares
             var version = q["version"];
             var targetFramework = q["targetFramework"];
 
-            var model = new CompatibilityModel()
+            var model = new CompatibilityModel
             {
-                PackageSelector = new PackageSelectorModel()
+                PackageSelector = new PackageSelectorModel
                 {
                     DefaultSource = source,
                     DefaultPackageId = packageId,
